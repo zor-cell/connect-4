@@ -1,0 +1,4 @@
+em++ -I. -o ../../main.js -Oz -s MODULARIZE=1 -s EXPORT_NAME=createModule --bind ../../src/main.cpp ../../src/bindings.cpp
+
+run command in the following directory:
+/dir/emsdk
