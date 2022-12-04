@@ -1,10 +1,8 @@
-#include "main.hpp"
+#include "game.hpp"
 
-Main::Main() {
-    std::cout << "RUNNING" << std::endl;
-    srand(time(NULL));
-}
+//for local testing
+int main(int argc, char** argv) {
+    Game* game = new Game();
 
-int Main::run() {
-    return rand() % 10;
+    return 0;
 }
