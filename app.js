@@ -1,5 +1,32 @@
+const ROWS = 6;
+const COLS = 7;
+
+let width = 100 / ROWS;
+let height = 100 / COLS;
+
+let board = setBoard();
+console.log(board)
+
+function setBoard() {
+    let curBoard = [];
+
+    for(let i = 0;i < ROWS;i++) {
+        curBoard[i] = [];
+        for(let j = 0;j < COLS;j++) {
+            curBoard[i].push(0);
+        }
+    }
+
+    return curBoard;
+}
+
 function App() {
     const [runs, setRuns] = React.useState(100000);
+
+    function onCellClick(event) {
+        console.log(event.target.className);
+        event.stopPropagation();
+    }
 
     function onRunsChange(event) {
         setRuns(Number(event.target.value));
@@ -12,10 +39,10 @@ function App() {
         event.preventDefault();
 
         //wait for module to initialize,
-        createModule().then(({Main}) => {
+        createModule().then(({Game}) => {
             //perform computation
-            const main = new Main();
-            let result = main.run();
+            const game = new Game();
+            let result = game.run();
 
             document.getElementById("result").innerHTML = result;
         });
@@ -35,6 +62,24 @@ function App() {
 
             <h2>Result</h2>
             <h3 id="result">No Result</h3>
+
+            <table className="board">
+                <thead></thead>
+                <tbody>
+                    {board.map((row, rowKey) => {
+                        return (
+                            <tr key={rowKey}>
+                                {row.map((cell, cellKey) => {
+                                    return (
+                                        <td onClick={onCellClick} style={{width: 100/6 + "%", height: 25 + "%"}} className={rowKey.toString() + cellKey.toString()} key={cellKey}>{cell}</td>
+                                    )
+                                })}
+                            </tr>
+                        )
+                    })}
+                </tbody>
+            </table>
+            
         </div>
     );
 }

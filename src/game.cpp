@@ -7,7 +7,7 @@ Game::Game() {
     printBoard();
 }
 
-Game::initBoard() {
+void Game::initBoard() {
     board.resize(ROWS, std::vector<int>(COLS));
 
     for(int i = 0;i < ROWS;i++) {
@@ -17,7 +17,7 @@ Game::initBoard() {
     }
 }
 
-Game::printBoard() {
+void Game::printBoard() {
     for(int i = 0;i < ROWS;i++) {
         for(int j = 0;j < COLS;j++) {
             std::cout << board[i][j] << " ";

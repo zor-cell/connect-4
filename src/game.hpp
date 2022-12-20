@@ -1,5 +1,5 @@
-#ifndef H_RISK_HPP
-#define H_RISK_HPP
+#ifndef H_GAME_HPP
+#define H_GAME_HPP
 
 #include "stdafx.hpp"
 
@@ -13,8 +13,8 @@ class Game {
     public:
         Game();
 
-        initBoard();
-        printBoard();
+        void initBoard();
+        void printBoard();
 
         int run();
 };
