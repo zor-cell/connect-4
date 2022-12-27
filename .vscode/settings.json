@@ -96,7 +96,9 @@
         "__threading_support": "cpp",
         "__tree": "cpp",
         "__tuple": "cpp",
-        "string_view": "cpp"
+        "string_view": "cpp",
+        "*.tcc": "cpp",
+        "memory_resource": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled",
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
