@@ -115,13 +115,47 @@
     }
   }
 
-  .board {
+  .board, td {
     border: 1px solid black;
-    border-collapse: collapse;
+
+    margin-left: auto;
+    margin-right: auto;
+
+    padding: 5px;
   }
 
-  .board td {
-    border: 1px solid black;
+  .row {
+    
+  }
+
+  .cell {
+    width: 50px;
+    height: 50px;
+  }
+
+  .cell:hover {
+    cursor: pointer;
+  }
+
+  .piece {
+    width: 100%;
+    height: 100%;
+
+    border-radius: 50%;
+
+    transition: background-color 0.5s;
+  }
+
+  .empty {
+    background-color: white;
+  }
+
+  .player1 {
+    background-color: red;
+  }
+
+  .player2 {
+    background-color: blue;
   }
   
   /* //////////////////////
