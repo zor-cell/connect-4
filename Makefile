@@ -1,32 +1,27 @@
 SRC = ./src
 TARGET = .
-FILES = $(SRC)/main.cpp $(SRC)/game.cpp
 
 GCC = g++
 CFLAGS = -o $(TARGET)/main
-ARGS = 101
+CFILES = $(SRC)/main.cpp $(SRC)/game.cpp
 
 EMSCRIPTEN = ./dir/emsdk
-EMFLAGS = -o main.js -Oz -s MODULARIZE=1 -s EXPORT_NAME=createModule
+EMFLAGS = -I. -o main.js -Oz -s MODULARIZE=1 -s EXPORT_NAME=createModule --bind
+EMFILES = $(SRC)/game.cpp $(SRC)/bindings.cpp
 
 
-all: local
 
-default: main.cpp
+all: global
 
-local: default test
+local: main
 global: wasm
 
-main.cpp:
-	$(GCC) $(CFLAGS) $(FILES)
+main:
+	$(GCC) $(CFLAGS) $(CFILES)
+	$(TARGET)/main
 
 wasm: 
-	./dir/emsdk/em++.exe ../../main.cpp -s WASM=1 -o hello.html
+	em++ $(EMFLAGS) $(EMFILES)
 
 dud:
 	$(EMSCRIPTEN)/em++ -I. $(EMFLAGS) --bind $(SRC)/game.cpp $(SRC)/bindings.cpp
-
-
-test: main.cpp
-	$(TARGET)/main $(ARGS)
-

@@ -27,6 +27,7 @@ function App() {
             //perform computation
             const game = new Game();
             let result = game.run();
+            console.log(result)
 
             document.getElementById("result").innerHTML = result;
         });
@@ -97,8 +98,10 @@ function App() {
                 </tbody>
             </table>
 
+            <button onClick={handleSubmit}>Submit</button>
+
             <h2>Result</h2>
-            <h3 id="result">No Result</h3>
+            <h3 id="reesult">No Result</h3>
         </React.Fragment>
     );
 }

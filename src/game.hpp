@@ -30,6 +30,7 @@ class Game {
 
     public:
         Game();
+        Game(std::vector<int> b);
 
         void initBoard();
         void printBoard();

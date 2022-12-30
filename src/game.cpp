@@ -9,6 +9,18 @@ Game::Game() {
     std::cout << "Exit Status: " << run() << std::endl;
 }
 
+Game::Game(std::vector<int> b) {
+    srand(time(NULL));
+
+    
+    for(int i : b) {
+        std::cout << i << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "Exit Status: " << run() << std::endl;
+}
+
 void Game::initBoard() {
     board.resize(ROWS, std::vector<int>(COLS));
     height.resize(COLS);
@@ -39,14 +51,14 @@ void Game::printBoard() {
 }
 
 int Game::run() {
-    while(gameActive) {
+    /*while(gameActive) {
         int player = 1 + moves % 2;
 
         if(player == 1) inputCol();
         else chooseCol();
-    }
+    }*/
 
-    return exitStatus;
+    return rand() % 10;
 }
 
 bool Game::isValidMove(int col) {
