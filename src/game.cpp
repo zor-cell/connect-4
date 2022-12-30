@@ -1,6 +1,6 @@
 #include "game.hpp"
 
-Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height) : board(_board), height(_height) {
+Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth) : board(_board), height(_height), DEPTH(_depth) {
     srand(time(NULL));
 
     ROWS = board.size();
@@ -39,11 +39,23 @@ void Game::printBoard() {
 }
 
 int Game::bestMove() {
+    //test
     for(int i = 0;i < COLS;i++) {
         if(isValidMove(i)) return i;
     }
 
+
+
+
+
+
     return -1;
+}
+
+int Game::minimax(int depth, bool maximizing) {
+    if(depth == 0) {
+        return -10;
+    }
 }
 
 bool Game::isValidMove(int col) {

@@ -14,6 +14,8 @@ class Game {
         int ROWS;
         int COLS;
 
+        int DEPTH;
+
         //board representation 0 = empty, 1 = player1, 2 = player2
         std::vector<std::vector<int>> board;
         //store the number of stones in each column
@@ -29,7 +31,7 @@ class Game {
         ExitStatus exitStatus = UNDEFINED;
 
     public:
-        Game(std::vector<std::vector<int>> _board, std::vector<int> _height);
+        Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth);
 
         void initBoard();
         void printBoard();
@@ -39,6 +41,8 @@ class Game {
 
         //check if player won after move
         bool isWinningMove(int col, int player);
+
+        int minimax(bool maximizing);
 
         //returns a column in which the best move is to be played
         int bestMove();

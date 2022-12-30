@@ -10,6 +10,8 @@ let height = Array.from({length: SETTINGS.cols}, () => 0);
 let currentPlayer = SETTINGS.startingPlayer;
 
 function App() {
+    const [depth, setDepth] = React.useState(SETTINGS.depth);
+
     const [forceRender, setForceRender] = React.useState(false);
 
     function getBestMove() {
@@ -29,7 +31,7 @@ function App() {
         let vectorHeight = vectorFromArray(height);
 
         //create instance of C++ game class via embind
-        let game = new Module.Game(vectorBoard, vectorHeight);
+        let game = new Module.Game(vectorBoard, vectorHeight, depth);
         let result = game.bestMove();
 
         game.delete();
@@ -72,6 +74,10 @@ function App() {
         return 'empty';
     }
 
+    function changeDepth(event) {
+        setDepth(event.target.value);
+    }
+
     return (
         <React.Fragment>
             {console.log("render")}
@@ -94,6 +100,8 @@ function App() {
                     })}
                 </tbody>
             </table>
+
+            <input type="range" min="0" max="5" onChange={changeDepth}></input>
 
             <h2>Result</h2>
             <h3 id="result">No Result</h3>
