@@ -1,36 +1,42 @@
 const SETTINGS = {
     rows: 6,
     cols: 7,
-    player: 2,
+    startingPlayer: 1,
     depth: 3,
-  };
+};
+
+let board = Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTINGS.cols}, () => 0));
+let height = Array.from({length: SETTINGS.cols}, () => 0);
+let currentPlayer = SETTINGS.startingPlayer;
 
 function App() {
-    //2d array as game board
-    const [board, setBoard] = React.useState(
-        Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTINGS.cols}, () => 0))
-    );
-    //amount of pieces in each column
-    const [height, setHeight] = React.useState(Array.from({length: SETTINGS.cols}, () => 0));
-    //current player to move
-    const [player, setPlayer] = React.useState(SETTINGS.player);
-    
+    const [forceRender, setForceRender] = React.useState(false);
 
-    function handleSubmit(event) {
+    function getBestMove() {
         document.getElementById("result").innerHTML = "Computing result...";
         
-        //stop page from reloading after submit
-        event.preventDefault();
-
         //wait for module to initialize,
-        createModule().then(({Game}) => {
+        /*createModule().then(({Game}) => {
             //perform computation
             const game = new Game();
             let result = game.run();
             console.log(result)
 
             document.getElementById("result").innerHTML = result;
-        });
+        });*/
+
+        let vectorBoard = vector2dFromArray2d(board);
+        let vectorHeight = vectorFromArray(height);
+
+        //create instance of C++ game class via embind
+        let game = new Module.Game(vectorBoard, vectorHeight);
+        let result = game.bestMove();
+
+        game.delete();
+
+        document.getElementById("result").innerHTML = result;
+
+        return result;
     }
 
     //check if given move is possible
@@ -39,35 +45,23 @@ function App() {
     }
 
     //set piece in given column if possible
-    function dropPiece(columnObject) {
-        let col = columnObject.columnIndex;
-
+    function dropPiece(col) {
         if(validMove(col)) {
             let row = SETTINGS.rows - 1 - height[col];
 
-            //set cell at [row, col] to player
-            let newBoard = board.map((curRow, i) => {
-                if(i === row) {
-                    return curRow.map((cell, j) => {
-                        if(j === col) return player;
-                        else return cell;
-                    });
-                } else return curRow;
-            });
-            setBoard(newBoard);
+            //player 1
+            board[row][col] = currentPlayer;
+            height[col]++;
 
-            //increase height at given column by 1
-            let newHeight = height.map((h, i) => {
-                if(i === col) return h + 1;
-                else return h;
-            });
-            setHeight(newHeight);
-            
-            //switch current player
-            if(player === 1) setPlayer(2)
-            else setPlayer(1);
+            //player switch
+            if(currentPlayer === 1) {
+                currentPlayer = 2;
+                dropPiece(getBestMove());
+            } else {
+                currentPlayer = 1;
+            }
 
-            console.log(board);
+            setForceRender(!forceRender);
         }
     }
 
@@ -80,6 +74,7 @@ function App() {
 
     return (
         <React.Fragment>
+            {console.log("render")}
             <h1>Connect 4</h1>
 
             <table className="board">
@@ -88,7 +83,9 @@ function App() {
                         return (
                             <tr key={rowIndex} className="row">
                                 {row.map((cell, columnIndex) => {
-                                    return <td key={columnIndex} className="cell"  onClick={() => dropPiece({columnIndex})}>
+                                    return <td key={columnIndex} className="cell"  onClick={() => {
+                                        dropPiece(columnIndex);                           
+                                    }}>
                                         <div className={`piece ${setCellColor(cell)}`}></div>
                                     </td>
                                 })}
@@ -98,10 +95,8 @@ function App() {
                 </tbody>
             </table>
 
-            <button onClick={handleSubmit}>Submit</button>
-
             <h2>Result</h2>
-            <h3 id="reesult">No Result</h3>
+            <h3 id="result">No Result</h3>
         </React.Fragment>
     );
 }
@@ -110,3 +105,30 @@ ReactDOM.render(
     <App/>,
     document.getElementById('container')
 );
+
+//HELPER FUNCTIONS
+
+//create vector<int> (C++) from array (JS) via embind Module
+//this vector<int> can be passed to functions in embind Module
+function vectorFromArray(array) {
+    let vector = new Module.Vector();
+
+    for(let i = 0;i < array.length;i++) {
+        vector.push_back(array[i]);
+    }
+
+    return vector;
+}
+
+//create vector<vector<int>> (C++) from array2d (JS) via embind Module
+//this vector<vector<int>> can be passed to functions in embind Module
+function vector2dFromArray2d(array2d) {
+    let vector2d = new Module.Vector2D();
+
+    for(let i = 0;i < array2d.length;i++) {
+        let row = vectorFromArray(array2d[i]);
+        vector2d.push_back(row);
+    }
+
+    return vector2d;
+}

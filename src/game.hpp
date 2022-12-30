@@ -11,8 +11,8 @@ enum ExitStatus {TIE, P1_WIN, P2_WIN, UNDEFINED};
 
 class Game {
     private:
-        const int ROWS = 6;
-        const int COLS = 7;
+        int ROWS;
+        int COLS;
 
         //board representation 0 = empty, 1 = player1, 2 = player2
         std::vector<std::vector<int>> board;
@@ -29,8 +29,7 @@ class Game {
         ExitStatus exitStatus = UNDEFINED;
 
     public:
-        Game();
-        Game(std::vector<int> b);
+        Game(std::vector<std::vector<int>> _board, std::vector<int> _height);
 
         void initBoard();
         void printBoard();
@@ -38,12 +37,10 @@ class Game {
         bool isValidMove(int col);
         void makeMove(int col, int player);
 
-        void inputCol();
-        void chooseCol();
-
         //check if player won after move
         bool isWinningMove(int col, int player);
 
-        int run();
+        //returns a column in which the best move is to be played
+        int bestMove();
 };
 #endif

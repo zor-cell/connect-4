@@ -1,24 +1,12 @@
 #include "game.hpp"
 
-Game::Game() {
+Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height) : board(_board), height(_height) {
     srand(time(NULL));
 
-    initBoard();
+    ROWS = board.size();
+    COLS = board[0].size();
+
     printBoard();
-
-    std::cout << "Exit Status: " << run() << std::endl;
-}
-
-Game::Game(std::vector<int> b) {
-    srand(time(NULL));
-
-    
-    for(int i : b) {
-        std::cout << i << " ";
-    }
-    std::cout << std::endl;
-
-    std::cout << "Exit Status: " << run() << std::endl;
 }
 
 void Game::initBoard() {
@@ -50,19 +38,16 @@ void Game::printBoard() {
     std::cout << "\n";
 }
 
-int Game::run() {
-    /*while(gameActive) {
-        int player = 1 + moves % 2;
+int Game::bestMove() {
+    for(int i = 0;i < COLS;i++) {
+        if(isValidMove(i)) return i;
+    }
 
-        if(player == 1) inputCol();
-        else chooseCol();
-    }*/
-
-    return rand() % 10;
+    return -1;
 }
 
 bool Game::isValidMove(int col) {
-    return height[col] < COLS;
+    return height[col] < ROWS;
 }
 
 void Game::makeMove(int col, int player) {
@@ -78,20 +63,6 @@ void Game::makeMove(int col, int player) {
         exitStatus = (player == 1 ? P1_WIN : P2_WIN);
         gameActive = false;
     }
-}
-
-void Game::inputCol() {
-    int col;
-    std::cin >> col;
-
-    if(isValidMove(col)) makeMove(col, 1 + moves % 2);
-    else inputCol();
-}
-
-void Game::chooseCol() {
-    int col = 0;//rand() % COLS;
-    if(isValidMove(col)) makeMove(col, 1 + moves % 2);
-    else chooseCol();
 }
 
 bool Game::isWinningMove(int col, int player) {

@@ -100,7 +100,7 @@
         "*.tcc": "cpp",
         "memory_resource": "cpp"
     },
-    "C_Cpp.errorSquiggles": "enabled",
+    "C_Cpp.errorSquiggles": "disabled",
     "C_Cpp.default.configurationProvider": "ms-vscode.makefile-tools",
     "makefile.alwaysPreConfigure": true,
     "makefile.makePath": "${workspaceFolder}/dir/MINGW/bin/make.exe",
