@@ -32,13 +32,14 @@ function App() {
 
         //create instance of C++ game class via embind
         let game = new Module.Game(vectorBoard, vectorHeight, depth);
-        let result = game.bestMove();
+        let result = game.bestMove(4, true);
+        console.log(result);
 
         game.delete();
 
-        document.getElementById("result").innerHTML = result;
+        document.getElementById("result").innerHTML = "Move: " + result.move + " | Score: " + result.score;
 
-        return result;
+        return result.move;
     }
 
     //check if given move is possible
@@ -80,7 +81,7 @@ function App() {
 
     return (
         <React.Fragment>
-            {console.log("render")}
+            {/*console.log("render")*/}
             <h1>Connect 4</h1>
 
             <table className="board">

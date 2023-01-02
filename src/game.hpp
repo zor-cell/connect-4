@@ -3,11 +3,20 @@
 
 #include "stdafx.hpp"
 
+#define INFINITY_POS std::numeric_limits<int>::max()
+#define INFINITY_NEG std::numeric_limits<int>::min()
+
 //P1_WIN: player 1 won the game
 //P2_WIN. player 2 won the game
 //TIE: the game is a tie as the board is filled with no winner
 //UNDEFINED: should never be returned, is the default value
 enum ExitStatus {TIE, P1_WIN, P2_WIN, UNDEFINED};
+
+//return type to be passed to javascript
+struct Result {
+    int move;
+    int score;
+};
 
 class Game {
     private:
@@ -29,22 +38,30 @@ class Game {
         //ONLY WEBASSEMBLY
         //value of stopped game to pass to front-end
         ExitStatus exitStatus = UNDEFINED;
-
-    public:
-        Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth);
-
+    
+    private:
         void initBoard();
         void printBoard();
 
         bool isValidMove(int col);
         void makeMove(int col, int player);
+        void undoMove(int col);
 
         //check if player won after move
         bool isWinningMove(int col, int player);
 
-        int minimax(bool maximizing);
+        //returns array of possible moves in 1 turn
+        std::vector<int> getPossibleMoves();
 
-        //returns a column in which the best move is to be played
-        int bestMove();
+        //recursive search of game tree where every node is a different board position coming from a previous node
+        Result minimax(int depth, int alpha, int beta, bool maximizing);
+        //evaluates current board position
+        int currentEval();
+
+    public:
+        Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth);
+
+        //returns best move and its evaluation
+        Result bestMove(int depth, bool maximizing);
 };
 #endif
