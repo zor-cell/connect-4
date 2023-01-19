@@ -1,12 +1,19 @@
 #include "game.hpp"
 
-Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth) : board(_board), height(_height), DEPTH(_depth) {
+Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth, int _moves) : board(_board), height(_height), DEPTH(_depth), moves(_moves) {
     srand(time(NULL));
 
     ROWS = board.size();
     COLS = board[0].size();
 
-    moves = 0;
+    heatMap.resize(ROWS, std::vector<int>(COLS));
+    for(int i = 0;i < ROWS;i++) {
+        for(int j = 0;j < COLS;j++) {
+            heatMap[i][j] = 5 - std::abs(COLS / 2 - j);
+            std::cout << heatMap[i][j] << " ";
+        }
+        std::cout << "\n";
+    }
 
     printBoard();
 }
@@ -41,11 +48,8 @@ Result Game::bestMove(int depth, bool maximizing) {
 
     std::vector<int> m = getPossibleMoves();
 
-    std::cout << "Depth: " << depth << ", Moves: ";
-    for(int i : m) {
-        std::cout << i << " ";
-    }
-    std::cout << "\n";
+    std::cout << "Total Moves: " << moves << ", Depth: " << depth
+    << ", Player: " << 1 + moves % 2 << ", Maximizing: " << maximizing << "\n";
 
     return minimax(depth, INFINITY_NEG, INFINITY_POS, maximizing);
 }
@@ -65,53 +69,74 @@ std::vector<int> Game::getPossibleMoves() {
 }
 
 Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
+    //check for draw
+    //if(moves >= ROWS * COLS) return {-1, 0};
+
     if(depth == 0) {
-        if(board[5][3]) return {-1, 5};
         //move is -1 because it is set in if branches
         return {-1, currentEval()};
     }
 
+    int currentPlayer = (maximizing ? 1 : 2);
+
     if(maximizing) {
-        int maxEval = INFINITY_NEG;
-        int bestMove = -1;
+        Result best = {-1, INFINITY_NEG};
 
-        std::vector<int> possibleMoves = getPossibleMoves();
+        //go through possible moves
+        for(int move = 0; move < COLS; move++) {
+            if(isValidMove(move)) {
+                //return best achievable score if win is possible
+                if(isWinningMove(move, currentPlayer)) return {move, INFINITY_POS};
 
-        for(int move : possibleMoves) {
-            makeMove(move, maximizing + 1);
-            int curEval = minimax(depth - 1, 0, 0, false).score;
-            undoMove(move);
+                makeMove(move, currentPlayer);
 
-            if(curEval > maxEval) {
-                maxEval = curEval;
-                bestMove = move;
+                Result current = minimax(depth - 1, 0, 0, false);
+                current.move = move;
+
+                undoMove(move);
+
+                if(current.score > best.score) {
+                    best = current;
+                }
             }
         }
 
-        return {bestMove, maxEval};
+        return best;
     } else {
-        int minEval = INFINITY_POS;
-        int bestMove = -1;
+        Result best = {-1, INFINITY_POS};
 
-        std::vector<int> possibleMoves = getPossibleMoves();
+        for(int move = 0;move < COLS;move++) {
+            if(isValidMove(move)) {
+                if(isWinningMove(move, currentPlayer)) return {move, INFINITY_NEG};
 
-        for(int move : possibleMoves) {
-            makeMove(move, maximizing + 1);
-            int curEval = minimax(depth - 1, 0, 0, false).score;
-            undoMove(move);
+                makeMove(move, currentPlayer);
 
-            if(curEval < minEval) {
-                minEval = curEval;
-                bestMove = move;
+                Result current = minimax(depth - 1, 0, 0, true);
+                current.move = move;
+
+                undoMove(move);
+
+                if(current.score < best.score) {
+                    best = current;
+                }
             }
         }
 
-        return {bestMove, minEval};
+        return best;
     }
 }
 
 int Game::currentEval() {
-    return 1;
+    int score = 0;
+
+    for(int i = 0;i < ROWS;i++) {
+        for(int j = 0;j < COLS;j++) {
+            if(board[i][j] == 1) score += heatMap[i][j];
+            if(board[i][j] == 2) score -= heatMap[i][j];
+        }
+    }
+
+    return score;
 }
 
 bool Game::isValidMove(int col) {
@@ -122,15 +147,15 @@ void Game::makeMove(int col, int player) {
     board[ROWS - 1 - height[col]][col] = player;
     height[col]++;
 
-    moves++;
+    //moves++;
 
     //printBoard();
 
-    if(isWinningMove(col, player)) {
+    /*if(isWinningMove(col, player)) {
         std::cout << player << " won\n";
         exitStatus = (player == 1 ? P1_WIN : P2_WIN);
         gameActive = false;
-    }
+    }*/
 }
 void Game::undoMove(int col) {
     if(height[col] < 1) {
@@ -141,21 +166,21 @@ void Game::undoMove(int col) {
     board[ROWS - height[col]][col] = 0;
 
     height[col]--;
-    moves--;
+    //moves--;
 }
 
 bool Game::isWinningMove(int col, int player) {
-    int row = ROWS - height[col];
+    int row = ROWS - 1 - height[col];
 
     //VERTICAL
     int count = 0;
-    if(height[col] >= 4) {
-        for(int i = 0;i < 4;i++) {
+    if(height[col] >= 3) {
+        for(int i = 1;i <= 3;i++) {
             if(board[row + i][col] == player) count++;
             else break;
         }
     }
-    if(count >= 4) return true;
+    if(count >= 3) return true;
 
     //HORIZONTAL
     count = 0;

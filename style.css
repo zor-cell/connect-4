@@ -124,10 +124,6 @@
     padding: 5px;
   }
 
-  .row {
-    
-  }
-
   .cell {
     width: 50px;
     height: 50px;
@@ -161,6 +157,10 @@
   /* //////////////////////
     General styling
     /////////////////////// */
+
+  .container {
+    text-align: center;
+  }
   
   body {
     font-family: var(--ff-body);

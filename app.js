@@ -9,8 +9,11 @@ let board = Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTIN
 let height = Array.from({length: SETTINGS.cols}, () => 0);
 let currentPlayer = SETTINGS.startingPlayer;
 
+let totalMoves = 0;
+
 function App() {
     const [depth, setDepth] = React.useState(SETTINGS.depth);
+    //const [totalMoves, setTotalMoves] = React.useState(0);
 
     const [forceRender, setForceRender] = React.useState(false);
 
@@ -31,8 +34,8 @@ function App() {
         let vectorHeight = vectorFromArray(height);
 
         //create instance of C++ game class via embind
-        let game = new Module.Game(vectorBoard, vectorHeight, depth);
-        let result = game.bestMove(4, true);
+        let game = new Module.Game(vectorBoard, vectorHeight, depth, totalMoves);
+        let result = game.bestMove(depth, false);
         console.log(result);
 
         game.delete();
@@ -64,6 +67,7 @@ function App() {
                 currentPlayer = 1;
             }
 
+            totalMoves++;
             setForceRender(!forceRender);
         }
     }
@@ -102,7 +106,10 @@ function App() {
                 </tbody>
             </table>
 
-            <input type="range" min="0" max="5" onChange={changeDepth}></input>
+            <h3>Total Moves: {totalMoves}</h3>
+            
+            <h3>Depth: {depth}</h3>
+            <input type="range" className="test" min="1" max="7" value={depth} onChange={changeDepth}></input>
 
             <h2>Result</h2>
             <h3 id="result">No Result</h3>

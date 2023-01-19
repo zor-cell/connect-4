@@ -38,6 +38,9 @@ class Game {
         //ONLY WEBASSEMBLY
         //value of stopped game to pass to front-end
         ExitStatus exitStatus = UNDEFINED;
+
+        //set greater values for better squares
+        std::vector<std::vector<int>> heatMap;
     
     private:
         void initBoard();
@@ -59,7 +62,7 @@ class Game {
         int currentEval();
 
     public:
-        Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth);
+        Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth, int _moves);
 
         //returns best move and its evaluation
         Result bestMove(int depth, bool maximizing);
