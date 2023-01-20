@@ -39,8 +39,11 @@ class Game {
         //value of stopped game to pass to front-end
         ExitStatus exitStatus = UNDEFINED;
 
+        //OPTIMIZATIONS
         //set greater values for better squares
         std::vector<std::vector<int>> heatMap;
+        //order potentially better moves earlier
+        std::vector<int> moveOrder = {3, 2, 4, 1, 5, 0, 6};
     
     private:
         void initBoard();
@@ -51,7 +54,8 @@ class Game {
         void undoMove(int col);
 
         //check if player won after move
-        bool isWinningMove(int col, int player);
+        //check if there is a win on the current board
+        bool isWinningPosition(int col, int player);
 
         //returns array of possible moves in 1 turn
         std::vector<int> getPossibleMoves();

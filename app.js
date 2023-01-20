@@ -2,18 +2,21 @@ const SETTINGS = {
     rows: 6,
     cols: 7,
     startingPlayer: 1,
-    depth: 3,
+    depth: 6,
 };
 
 let board = Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTINGS.cols}, () => 0));
 let height = Array.from({length: SETTINGS.cols}, () => 0);
 let currentPlayer = SETTINGS.startingPlayer;
 
-let totalMoves = 0;
+//map for which moves are better depending on column
+let moveMap = Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTINGS.cols}, () => 0));
+
+//let totalMoves = [];
 
 function App() {
     const [depth, setDepth] = React.useState(SETTINGS.depth);
-    //const [totalMoves, setTotalMoves] = React.useState(0);
+    const [totalMoves, setTotalMoves] = React.useState([]);
 
     const [forceRender, setForceRender] = React.useState(false);
 
@@ -34,7 +37,7 @@ function App() {
         let vectorHeight = vectorFromArray(height);
 
         //create instance of C++ game class via embind
-        let game = new Module.Game(vectorBoard, vectorHeight, depth, totalMoves);
+        let game = new Module.Game(vectorBoard, vectorHeight, depth, totalMoves.length);
         let result = game.bestMove(depth, false);
         console.log(result);
 
@@ -59,6 +62,8 @@ function App() {
             board[row][col] = currentPlayer;
             height[col]++;
 
+            setTotalMoves(totalMoves => [...totalMoves, col]);
+
             //player switch
             if(currentPlayer === 1) {
                 currentPlayer = 2;
@@ -66,8 +71,8 @@ function App() {
             } else {
                 currentPlayer = 1;
             }
-
-            totalMoves++;
+            
+            console.log(totalMoves);
             setForceRender(!forceRender);
         }
     }
@@ -83,9 +88,33 @@ function App() {
         setDepth(event.target.value);
     }
 
+    function undoMove(event) {
+        if(totalMoves.length == 0) return;
+
+        let temp = [...totalMoves];
+
+        //undo 2 last moves made
+        for(let _ = 0;_ < 2;_++) {
+            let move = temp[temp.length - 1];
+
+            for(let i = 0;i < board.length;i++) {
+                if(board[i][move] != 0) {
+                    board[i][move] = 0;
+                    height[move]--;
+                    temp.pop();
+                    break;
+                }
+            }
+        }
+        console.log(temp, "test")
+        
+        //update moves array
+        setTotalMoves(temp);
+    }
+
     return (
         <React.Fragment>
-            {/*console.log("render")*/}
+            {console.log("render")}
             <h1>Connect 4</h1>
 
             <table className="board">
@@ -105,11 +134,12 @@ function App() {
                     })}
                 </tbody>
             </table>
-
-            <h3>Total Moves: {totalMoves}</h3>
             
             <h3>Depth: {depth}</h3>
-            <input type="range" className="test" min="1" max="7" value={depth} onChange={changeDepth}></input>
+            <h3>Moves: {(totalMoves.length == 0 ? "-" : totalMoves.map(move => {return move + " ";}))}</h3>
+            
+            <button onClick={undoMove}>Undo</button>
+            <input type="range" className="test" min="1" max="10" value={depth} onChange={changeDepth}></input>
 
             <h2>Result</h2>
             <h3 id="result">No Result</h3>
