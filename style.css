@@ -125,7 +125,6 @@
   }
 
   .mouselock {
-    pointer-events: none;
     cursor: wait;
   }
 
@@ -135,7 +134,6 @@
   }
 
   .cell:hover {
-    cursor: pointer;
   }
 
   .piece {

@@ -12,6 +12,7 @@ let currentPlayer = SETTINGS.startingPlayer;
 //map for which moves are better depending on column
 let moveMap = Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTINGS.cols}, () => 0));
 
+let disable = false;
 //let totalMoves = [];
 
 function App() {
@@ -69,7 +70,15 @@ function getBestMove() {
     }
 
     //set piece in given column if possible
-    async function dropPiece(col) {
+    async function dropPiece(event, col) {
+        if(event != null) {
+            console.log(event, disable);
+            let b = document.getElementById("board");
+            if(b.className === "board mouselock") return;
+
+            //if(disable) return;
+        }
+
         if(validMove(col)) {
             let row = SETTINGS.rows - 1 - height[col];
 
@@ -81,11 +90,23 @@ function getBestMove() {
             //player switch
             if(currentPlayer === 1) {
                 currentPlayer = 2;
+                
+                let b = document.getElementById("board");
+                b.className = "board mouselock";
+                
+                disable = true;
                 let move = await getBestMove();
                 console.log("MOVE: ", move);
-                dropPiece(move);
+
+                dropPiece(null, move);
+                
+                //disable = false;
+
             } else {
                 currentPlayer = 1;
+                let b = document.getElementById("board");
+                b.className = "board";
+                //disable = false;
             }
             
             setForceRender(!forceRender);
@@ -101,11 +122,7 @@ function getBestMove() {
         return 'empty';
     }
 
-    function setPieceColor(cellValue, i, j) {
-        if(cellValue != 0) {
-            console.log(cellValue, i, j);
-        }
-
+    function setPieceColor(cellValue) {
         if(cellValue === 1) return 'player1';
         else if(cellValue === 2) return 'player2';
 
@@ -143,15 +160,15 @@ function getBestMove() {
             {console.log("RENDER")}
             <h1>Connect 4</h1>
 
-            <table className="board mouseloc">
+            <table id="board" className="board">
                 <tbody>
                     {board.map((row, rowIndex) => {
                         return (
                             <tr key={rowIndex} className="row">
                                 {row.map((cell, columnIndex) => {
                                     return <td key={columnIndex} className={`cell ${setCellColor(rowIndex, columnIndex)}`}
-                                        onClick={() => {dropPiece(columnIndex);}}>
-                                            <div className={`piece ${setPieceColor(cell, rowIndex, columnIndex)}`}></div>
+                                        onClick={(event) => {dropPiece(event, columnIndex);}}>
+                                            <div className={`piece ${setPieceColor(cell)}`}></div>
                                     </td>
                                 })}
                             </tr>
@@ -164,7 +181,7 @@ function getBestMove() {
             <h3>Moves: {(totalMoves.length == 0 ? "-" : totalMoves.map(move => {return move + " ";}))}</h3>
             
             <button onClick={undoMove}>Undo</button>
-            <input type="range" className="test" min="1" max="10" value={depth} onChange={changeDepth}></input>
+            <input type="range" className="test" min="1" max="13" value={depth} onChange={changeDepth}></input>
 
             <h2>Result</h2>
             <h3 id="result">No Result</h3>
