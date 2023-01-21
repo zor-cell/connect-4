@@ -15,7 +15,7 @@ Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _
         //std::cout << "\n";
     }
 
-    printBoard();
+    //printBoard();
 }
 
 void Game::initBoard() {
@@ -81,7 +81,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
         for(int move : moveOrder) {
             if(isValidMove(move)) {
                 //return best achievable score if win is possible
-                if(isWinningPosition(move, currentPlayer)) return {move, INFINITY_POS};
+                if(isWinningPosition(currentPlayer)) return {move, INFINITY_POS};
 
                 //run algorithm on board with current move played
                 makeMove(move, currentPlayer);
@@ -107,7 +107,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
 
         for(int move : moveOrder) {
             if(isValidMove(move)) {
-                if(isWinningPosition(move, currentPlayer)) return {move, INFINITY_NEG};
+                if(isWinningPosition(currentPlayer)) return {move, INFINITY_NEG};
 
                 makeMove(move, currentPlayer);
                 Result current = minimax(depth - 1, alpha, beta, true);
@@ -130,8 +130,8 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
 int Game::currentEval() {
     int score = 0;
 
-    if(isWinningPosition(0, 1)) return INFINITY_POS;
-    else if(isWinningPosition(0, 2)) return INFINITY_NEG;
+    if(isWinningPosition(1)) return INFINITY_POS;
+    else if(isWinningPosition(2)) return INFINITY_NEG;
 
     for(int i = 0;i < ROWS;i++) {
         for(int j = 0;j < COLS;j++) {
@@ -163,9 +163,9 @@ void Game::undoMove(int col) {
     height[col]--;
 }
 
-bool Game::isWinningPosition(int col, int player) {
+bool Game::isWinningPosition(int player) {
     //row is one cell above top stone in column
-    int row = ROWS - 1 - height[col];
+    //int row = ROWS - 1 - height[col];
 
     //layout for looping over whole board
     int count;

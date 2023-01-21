@@ -53,9 +53,8 @@ class Game {
         void makeMove(int col, int player);
         void undoMove(int col);
 
-        //check if player won after move
-        //check if there is a win on the current board
-        bool isWinningPosition(int col, int player);
+        //check if there is a win in current board position for given player
+        bool isWinningPosition(int player);
 
         //returns array of possible moves in 1 turn
         std::vector<int> getPossibleMoves();

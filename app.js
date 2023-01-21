@@ -20,32 +20,37 @@ function App() {
 
     const [forceRender, setForceRender] = React.useState(false);
 
-    function getBestMove() {
-        document.getElementById("result").innerHTML = "Computing result...";
+function getBestMove() {
+        document.getElementById("result").innerHTML = "Computing Move...";
+
+        //enable mouselock
         
-        //wait for module to initialize,
-        /*createModule().then(({Game}) => {
-            //perform computation
-            const game = new Game();
-            let result = game.run();
-            console.log(result)
+        //return promise of module initialisation
+        return createModule().then(({Game, Vector, Vector2D}) => {
+            let vectorBoard = vector2dFromArray2d(board, Vector, Vector2D);
+            let vectorHeight = vectorFromArray(height, Vector);
 
-            document.getElementById("result").innerHTML = result;
-        });*/
+            //create instance of C++ game class via embind
+            let game = new Game(vectorBoard, vectorHeight, depth, totalMoves.length);
+            //perform computations
+            let result = game.bestMove(depth, false);
+            console.log("c++ result", result)
 
-        let vectorBoard = vector2dFromArray2d(board);
-        let vectorHeight = vectorFromArray(height);
+            game.delete();
 
+            document.getElementById("result").innerHTML = "Move: " + result.move + " | Score: " + result.score;
+
+            return result.move;
+        });
+        
         //create instance of C++ game class via embind
-        let game = new Module.Game(vectorBoard, vectorHeight, depth, totalMoves.length);
+        /*let game = new Module.Game(vectorBoard, vectorHeight, depth, totalMoves.length);
         let result = game.bestMove(depth, false);
-        console.log(result);
+        //console.log(result);
 
         game.delete();
 
-        document.getElementById("result").innerHTML = "Move: " + result.move + " | Score: " + result.score;
-
-        return result.move;
+        document.getElementById("result").innerHTML = "Move: " + result.move + " | Score: " + result.score;*/
     }
 
     //check if given move is possible
@@ -53,12 +58,21 @@ function App() {
         return height[col] < SETTINGS.rows;
     }
 
+    function winningPosition() {
+        const position = {
+            win: false,
+            player: null,
+            indices: [],
+        }
+
+        return position;
+    }
+
     //set piece in given column if possible
-    function dropPiece(col) {
+    async function dropPiece(col) {
         if(validMove(col)) {
             let row = SETTINGS.rows - 1 - height[col];
 
-            //player 1
             board[row][col] = currentPlayer;
             height[col]++;
 
@@ -67,21 +81,35 @@ function App() {
             //player switch
             if(currentPlayer === 1) {
                 currentPlayer = 2;
-                dropPiece(getBestMove());
+                let move = await getBestMove();
+                console.log("MOVE: ", move);
+                dropPiece(move);
             } else {
                 currentPlayer = 1;
             }
             
-            console.log(totalMoves);
             setForceRender(!forceRender);
         }
     }
 
-    function setCellColor(cellValue) {
+    function setCellColor(i, j) {
+        //color last move differently
+        let col = totalMoves[totalMoves.length - 1];
+        let row = SETTINGS.rows - height[col];
+        if(row == i && col == j) return 'move';
+
+        return 'empty';
+    }
+
+    function setPieceColor(cellValue, i, j) {
+        if(cellValue != 0) {
+            console.log(cellValue, i, j);
+        }
+
         if(cellValue === 1) return 'player1';
         else if(cellValue === 2) return 'player2';
 
-        return 'empty';
+        return 'None';
     }
 
     function changeDepth(event) {
@@ -105,28 +133,25 @@ function App() {
                     break;
                 }
             }
-        }
-        console.log(temp, "test")
-        
+        }        
         //update moves array
         setTotalMoves(temp);
     }
 
     return (
         <React.Fragment>
-            {console.log("render")}
+            {console.log("RENDER")}
             <h1>Connect 4</h1>
 
-            <table className="board">
+            <table className="board mouseloc">
                 <tbody>
                     {board.map((row, rowIndex) => {
                         return (
                             <tr key={rowIndex} className="row">
                                 {row.map((cell, columnIndex) => {
-                                    return <td key={columnIndex} className="cell"  onClick={() => {
-                                        dropPiece(columnIndex);                           
-                                    }}>
-                                        <div className={`piece ${setCellColor(cell)}`}></div>
+                                    return <td key={columnIndex} className={`cell ${setCellColor(rowIndex, columnIndex)}`}
+                                        onClick={() => {dropPiece(columnIndex);}}>
+                                            <div className={`piece ${setPieceColor(cell, rowIndex, columnIndex)}`}></div>
                                     </td>
                                 })}
                             </tr>
@@ -156,8 +181,8 @@ ReactDOM.render(
 
 //create vector<int> (C++) from array (JS) via embind Module
 //this vector<int> can be passed to functions in embind Module
-function vectorFromArray(array) {
-    let vector = new Module.Vector();
+function vectorFromArray(array, Vector) {
+    let vector = new Vector();
 
     for(let i = 0;i < array.length;i++) {
         vector.push_back(array[i]);
@@ -168,11 +193,11 @@ function vectorFromArray(array) {
 
 //create vector<vector<int>> (C++) from array2d (JS) via embind Module
 //this vector<vector<int>> can be passed to functions in embind Module
-function vector2dFromArray2d(array2d) {
-    let vector2d = new Module.Vector2D();
+function vector2dFromArray2d(array2d, Vector, Vector2D) {
+    let vector2d = new Vector2D();
 
     for(let i = 0;i < array2d.length;i++) {
-        let row = vectorFromArray(array2d[i]);
+        let row = vectorFromArray(array2d[i], Vector);
         vector2d.push_back(row);
     }
 

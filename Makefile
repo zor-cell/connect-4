@@ -19,3 +19,6 @@ local:
 	
 global:
 	em++ $(EMFLAGS) $(EMFILES)
+
+global2:
+	em++ $(EMFLAGS_OLD) $(EMFILES)
