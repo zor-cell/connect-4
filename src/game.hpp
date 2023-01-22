@@ -56,13 +56,12 @@ class Game {
         //check if there is a win in current board position for given player
         bool isWinningPosition(int player);
 
-        //returns array of possible moves in 1 turn
-        std::vector<int> getPossibleMoves();
-
         //recursive search of game tree where every node is a different board position coming from a previous node
         Result minimax(int depth, int alpha, int beta, bool maximizing);
         //evaluates current board position
         int currentEval();
+
+        bool isDraw();
 
     public:
         Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth, int _moves);

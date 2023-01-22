@@ -124,16 +124,13 @@
     padding: 5px;
   }
 
-  .mouselock {
+  .loading {
     cursor: wait;
   }
 
   .cell {
     width: 50px;
     height: 50px;
-  }
-
-  .cell:hover {
   }
 
   .piece {
@@ -147,6 +144,10 @@
 
   .move {
     background-color: yellow;
+  }
+
+  .win {
+    background-color: green;
   }
 
   .empty {

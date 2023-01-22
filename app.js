@@ -9,56 +9,17 @@ let board = Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTIN
 let height = Array.from({length: SETTINGS.cols}, () => 0);
 let currentPlayer = SETTINGS.startingPlayer;
 
-//map for which moves are better depending on column
-let moveMap = Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTINGS.cols}, () => 0));
-
-let disable = false;
-//let totalMoves = [];
+let gameOver = false;
 
 function App() {
     const [depth, setDepth] = React.useState(SETTINGS.depth);
+    //list of played moves
     const [totalMoves, setTotalMoves] = React.useState([]);
-
-    const [gameOver, setGameOver] = React.useState(false);
-
-    const [forceRender, setForceRender] = React.useState(false);
-
-    //run c++ algorithm to determine best move, return algorithm result as promise
-    function getBestMove() {
-        document.getElementById("result").innerHTML = "Computing Move...";
-
-        //enable mouselock
-        
-        //return promise of module initialisation
-        return createModule().then(({Game, Vector, Vector2D}) => {
-            let vectorBoard = vector2dFromArray2d(board, Vector, Vector2D);
-            let vectorHeight = vectorFromArray(height, Vector);
-
-            //create instance of C++ game class via embind
-            let game = new Game(vectorBoard, vectorHeight, depth, totalMoves.length);
-            //perform computations
-            let result = game.bestMove(depth, false);
-            console.log("c++ result", result)
-
-            game.delete();
-
-            document.getElementById("result").innerHTML = "Move: " + result.move + " | Score: " + result.score;
-
-            return result.move;
-        });
-        
-        //create instance of C++ game class via embind
-        /*let game = new Module.Game(vectorBoard, vectorHeight, depth, totalMoves.length);
-        let result = game.bestMove(depth, false);
-        //console.log(result);
-
-        game.delete();
-
-        document.getElementById("result").innerHTML = "Move: " + result.move + " | Score: " + result.score;*/
-    }
+    //store indices of winning pieces in case winning position was reached
+    const [winMoves, setWinMoves] = React.useState([]);
 
     //check if given move is possible
-    function validMove(col) {
+    function isValidMove(col) {
         return height[col] < SETTINGS.rows;
     }
 
@@ -70,41 +31,56 @@ function App() {
             cells: [],
         }
 
+        //count of consecutive pieces
         let count;
+        //indices of consecutive pieces
+        let cells;
         for(let player = 1;player <= 2;player++) {
             for(let i = 0; i < SETTINGS.rows; i++) {
                 for(let j = 0; j < SETTINGS.cols; j++) {
                     //HORIZONTAL
                     count = 0;
+                    cells = [];
                     for(let k = 0; k < 4; k++) {
-                        if(j - k >= 0 && board[i][j - k] == player) count++;
-                        else break;
+                        if(j - k >= 0 && board[i][j - k] == player) {
+                            cells.push({i: i, j: j - k});
+                            count++;
+                        } else break;
                     }
-                    if(count >= 4) position = {win: true, player: player, cells: []};
+                    if(count >= 4) position = {win: true, player: player, cells: cells};
 
                     //VERTICAL
                     count = 0;
+                    cells = [];
                     for(let k = 0; k < 4; k++) {
-                        if(i - k >= 0 && board[i - k][j] == player) count++;
-                        else break;
+                        if(i - k >= 0 && board[i - k][j] == player) {
+                            cells.push({i: i - k, j: j});
+                            count++;
+                        }else break;
                     }
-                    if(count >= 4) position = {win: true, player: player, cells: []};
+                    if(count >= 4) position = {win: true, player: player, cells: cells};
 
                     //DIAGONAL LEFT
                     count = 0;
+                    cells = [];
                     for(let k = 0; k < 4; k++) {
-                        if(i - k >= 0 && j - k >= 0 && board[i - k][j - k] == player) count++;
-                        else break;
+                        if(i - k >= 0 && j - k >= 0 && board[i - k][j - k] == player) {
+                            cells.push({i: i - k, j: j - k});
+                            count++;
+                        } else break;
                     }
-                    if(count >= 4) position = {win: true, player: player, cells: []};
+                    if(count >= 4) position = {win: true, player: player, cells: cells};
 
                     //DIAGONAL RIGHT
                     count = 0;
+                    cells = [];
                     for(let k = 0; k < 4; k++) {
-                        if(i + k < SETTINGS.rows && j - k >= 0 && board[i + k][j - k] == player) count++;
-                        else break;
+                        if(i + k < SETTINGS.rows && j - k >= 0 && board[i + k][j - k] == player) {
+                            cells.push({i: i + k, j: j - k});
+                            count++;
+                        } else break;
                     }
-                    if(count >= 4) position = {win: true, player: player, cells: []};
+                    if(count >= 4) position = {win: true, player: player, cells: cells};
                 }
             }
         }
@@ -112,70 +88,110 @@ function App() {
         return position;
     }
 
-    //set piece in given column if possible
-    async function dropPiece(event, col) {
-        //check first because of undo move
-        let winPosition = winningPosition();
-        if(winPosition.win) {
-            console.log(winPosition);
-            setGameOver(true);
-        } else {
-            setGameOver(false);
-        }
+    function makeMove(col, isHuman) {
+        //dont allow move from human while its computers turn
+        if(isHuman && currentPlayer != 1) return;
 
-        console.log(gameOver);
-
-
+        //dont allow move if game is over
         if(gameOver) return;
 
-        if(event != null) {
-            //console.log(event, disable);
-            let b = document.getElementById("board");
-            if(b.className === "board mouselock") return;
-
-            //if(disable) return;
-        }
-
-        if(validMove(col)) {
+        if(isValidMove(col)) {
+            //update board
             let row = SETTINGS.rows - 1 - height[col];
-
             board[row][col] = currentPlayer;
             height[col]++;
 
+            //update moves list
             setTotalMoves(totalMoves => [...totalMoves, col]);
 
-            //player switch
-            if(currentPlayer === 1) {
-                currentPlayer = 2;
-                
-                let b = document.getElementById("board");
-                b.className = "board mouselock";
-                
-                disable = true;
-                let move = await getBestMove();
-                //console.log("MOVE: ", move);
+            //check for win in position
+            let winPosition = winningPosition();
+            if(winPosition.win) {
+                document.getElementById("result").innerHTML = "Player " + winPosition.player + " won!";
 
-                dropPiece(null, move);
-                
-                //disable = false;
+                setWinMoves(winPosition.cells);
 
-            } else {
-                currentPlayer = 1;
-                let b = document.getElementById("board");
-                b.className = "board";
-                //disable = false;
+                gameOver = true;
             }
-            
-            setForceRender(!forceRender);
+
+            currentPlayer = (currentPlayer === 1 ? 2 : 1);
+            if(isHuman) makeMoveComputer();
+        }
+    }
+
+    //use web worker to call backend script
+    function makeMoveComputer() {
+        document.getElementById("result").innerHTML = "Computing Move...";
+        document.getElementById("board").className = "board loading";
+
+        const worker = new Worker('worker.js');
+        worker.postMessage({
+            type: 'RUN',
+            payload: {
+                depth: depth,
+                board: board,
+                height: height
+            }
+        });
+
+        worker.onmessage = function(message) {
+            if(message.data.type === 'RESULT') {
+                const move = message.data.payload.move;
+                const score = message.data.payload.score;
+
+                document.getElementById("result").innerHTML = "Move: " + move + " | Score: " + score;
+                document.getElementById("board").className = "board";
+
+                makeMove(move, false);
+            }
+        }
+    }
+
+    //undo the last 2 moves (player and computer)
+    function undoMove() {
+        if(totalMoves.length == 0) return;
+
+        let temp = [...totalMoves];
+
+        //undo 2 last moves made
+        for(let _ = 0;_ < 2;_++) {
+            let move = temp[temp.length - 1];
+
+            for(let i = 0;i < board.length;i++) {
+                if(board[i][move] != 0) {
+                    board[i][move] = 0;
+                    height[move]--;
+                    temp.pop();
+                    break;
+                }
+            }
+        }
+        //update moves array
+        setTotalMoves(temp);
+
+        //if position was win position, continue game
+        if(gameOver) {
+            setWinMoves([]);
+
+            gameOver = false;
         }
     }
 
     //set cell background-color with class names and css
     function setCellColor(i, j) {
-        //color last move differently
-        let col = totalMoves[totalMoves.length - 1];
-        let row = SETTINGS.rows - height[col];
-        if(row == i && col == j) return 'move';
+        //color winning moves
+        if(winMoves.length > 0) {
+            for(let move of winMoves) {
+                if(i == move.i && j == move.j) return 'win';
+            }
+        }
+
+        //color last move
+        if(totalMoves.length > 0) {
+            let col = totalMoves[totalMoves.length - 1];
+            let row = SETTINGS.rows - height[col];
+            if(row == i && col == j) return 'move';
+        }
 
         return 'empty';
     }
@@ -193,29 +209,6 @@ function App() {
         setDepth(event.target.value);
     }
 
-    //undo the last 2 moves (player and computer)
-    function undoMove(event) {
-        if(totalMoves.length == 0) return;
-
-        let temp = [...totalMoves];
-
-        //undo 2 last moves made
-        for(let _ = 0;_ < 2;_++) {
-            let move = temp[temp.length - 1];
-
-            for(let i = 0;i < board.length;i++) {
-                if(board[i][move] != 0) {
-                    board[i][move] = 0;
-                    height[move]--;
-                    temp.pop();
-                    break;
-                }
-            }
-        }        
-        //update moves array
-        setTotalMoves(temp);
-    }
-
     return (
         <React.Fragment>
             {console.log("RENDER")}
@@ -228,7 +221,7 @@ function App() {
                             <tr key={rowIndex} className="row">
                                 {row.map((cell, columnIndex) => {
                                     return <td key={columnIndex} className={`cell ${setCellColor(rowIndex, columnIndex)}`}
-                                        onClick={(event) => {dropPiece(event, columnIndex);}}>
+                                        onClick={() => {makeMove(columnIndex, true);}}>
                                             <div className={`piece ${setPieceColor(cell)}`}></div>
                                     </td>
                                 })}
@@ -254,30 +247,3 @@ ReactDOM.render(
     <App/>,
     document.getElementById('container')
 );
-
-//HELPER FUNCTIONS
-
-//create vector<int> (C++) from array (JS) via embind Module
-//this vector<int> can be passed to functions in embind Module
-function vectorFromArray(array, Vector) {
-    let vector = new Vector();
-
-    for(let i = 0;i < array.length;i++) {
-        vector.push_back(array[i]);
-    }
-
-    return vector;
-}
-
-//create vector<vector<int>> (C++) from array2d (JS) via embind Module
-//this vector<vector<int>> can be passed to functions in embind Module
-function vector2dFromArray2d(array2d, Vector, Vector2D) {
-    let vector2d = new Vector2D();
-
-    for(let i = 0;i < array2d.length;i++) {
-        let row = vectorFromArray(array2d[i], Vector);
-        vector2d.push_back(row);
-    }
-
-    return vector2d;
-}

@@ -6,10 +6,8 @@ CFLAGS = -o $(TARGET)/main
 CFILES = $(SRC)/main.cpp $(SRC)/game.cpp
 
 EMSCRIPTEN = ./dir/emsdk
-EMFLAGS = -lembind -o main.js -Oz
+EMFLAGS = -lembind -o main.js -Oz -s MODULARIZE=1 -s EXPORT_NAME=createModule
 EMFILES = $(SRC)/game.cpp $(SRC)/bindings.cpp
-
-EMFLAGS_OLD = -I. -o main.js -Oz -s MODULARIZE=1 -s EXPORT_NAME=createModule --bind
 
 all: global
 
@@ -19,6 +17,3 @@ local:
 	
 global:
 	em++ $(EMFLAGS) $(EMFILES)
-
-global2:
-	em++ $(EMFLAGS_OLD) $(EMFILES)

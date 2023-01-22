@@ -67,7 +67,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
     int currentPlayer = (maximizing ? 1 : 2);
 
     //check for draw
-    if(moves >= ROWS * COLS) return {-1, 0};
+    if(isDraw()) return {-5, 0};
 
     if(depth == 0) {
         //move is -1 because it is set in if branches
@@ -125,6 +125,14 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
 
         return best;
     }
+}
+
+bool Game::isDraw() {
+    for(int i = 0;i < COLS;i++) {
+        if(height[i] < ROWS) return false;
+    }
+
+    return true;
 }
 
 int Game::currentEval() {
