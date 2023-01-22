@@ -19,9 +19,12 @@ function App() {
     const [depth, setDepth] = React.useState(SETTINGS.depth);
     const [totalMoves, setTotalMoves] = React.useState([]);
 
+    const [gameOver, setGameOver] = React.useState(false);
+
     const [forceRender, setForceRender] = React.useState(false);
 
-function getBestMove() {
+    //run c++ algorithm to determine best move, return algorithm result as promise
+    function getBestMove() {
         document.getElementById("result").innerHTML = "Computing Move...";
 
         //enable mouselock
@@ -59,11 +62,51 @@ function getBestMove() {
         return height[col] < SETTINGS.rows;
     }
 
+    //check if a win is in the current board position
     function winningPosition() {
-        const position = {
+        let position = {
             win: false,
             player: null,
-            indices: [],
+            cells: [],
+        }
+
+        let count;
+        for(let player = 1;player <= 2;player++) {
+            for(let i = 0; i < SETTINGS.rows; i++) {
+                for(let j = 0; j < SETTINGS.cols; j++) {
+                    //HORIZONTAL
+                    count = 0;
+                    for(let k = 0; k < 4; k++) {
+                        if(j - k >= 0 && board[i][j - k] == player) count++;
+                        else break;
+                    }
+                    if(count >= 4) position = {win: true, player: player, cells: []};
+
+                    //VERTICAL
+                    count = 0;
+                    for(let k = 0; k < 4; k++) {
+                        if(i - k >= 0 && board[i - k][j] == player) count++;
+                        else break;
+                    }
+                    if(count >= 4) position = {win: true, player: player, cells: []};
+
+                    //DIAGONAL LEFT
+                    count = 0;
+                    for(let k = 0; k < 4; k++) {
+                        if(i - k >= 0 && j - k >= 0 && board[i - k][j - k] == player) count++;
+                        else break;
+                    }
+                    if(count >= 4) position = {win: true, player: player, cells: []};
+
+                    //DIAGONAL RIGHT
+                    count = 0;
+                    for(let k = 0; k < 4; k++) {
+                        if(i + k < SETTINGS.rows && j - k >= 0 && board[i + k][j - k] == player) count++;
+                        else break;
+                    }
+                    if(count >= 4) position = {win: true, player: player, cells: []};
+                }
+            }
         }
 
         return position;
@@ -71,8 +114,22 @@ function getBestMove() {
 
     //set piece in given column if possible
     async function dropPiece(event, col) {
+        //check first because of undo move
+        let winPosition = winningPosition();
+        if(winPosition.win) {
+            console.log(winPosition);
+            setGameOver(true);
+        } else {
+            setGameOver(false);
+        }
+
+        console.log(gameOver);
+
+
+        if(gameOver) return;
+
         if(event != null) {
-            console.log(event, disable);
+            //console.log(event, disable);
             let b = document.getElementById("board");
             if(b.className === "board mouselock") return;
 
@@ -96,7 +153,7 @@ function getBestMove() {
                 
                 disable = true;
                 let move = await getBestMove();
-                console.log("MOVE: ", move);
+                //console.log("MOVE: ", move);
 
                 dropPiece(null, move);
                 
@@ -113,6 +170,7 @@ function getBestMove() {
         }
     }
 
+    //set cell background-color with class names and css
     function setCellColor(i, j) {
         //color last move differently
         let col = totalMoves[totalMoves.length - 1];
@@ -122,6 +180,7 @@ function getBestMove() {
         return 'empty';
     }
 
+    //set piece background-colors with class names and css
     function setPieceColor(cellValue) {
         if(cellValue === 1) return 'player1';
         else if(cellValue === 2) return 'player2';
@@ -129,10 +188,12 @@ function getBestMove() {
         return 'None';
     }
 
+    //set depth according to sider value
     function changeDepth(event) {
         setDepth(event.target.value);
     }
 
+    //undo the last 2 moves (player and computer)
     function undoMove(event) {
         if(totalMoves.length == 0) return;
 
