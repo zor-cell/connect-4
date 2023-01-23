@@ -1,7 +1,9 @@
 #include "game.hpp"
 
-Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth, int _moves) : board(_board), height(_height), DEPTH(_depth), moves(_moves) {
+Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height) : board(_board), height(_height), transpositionTable(1000000) {
     srand(time(NULL));
+
+    transpositionTable.print();
 
     ROWS = board.size();
     COLS = board[0].size();
@@ -14,6 +16,19 @@ Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _
         }
         //std::cout << "\n";
     }
+
+    /*for(auto i : table) {
+        for(auto j : i) {
+            std::cout << j << " ";
+        }
+        std::cout << "\n";
+    }*/
+
+    int h = transpositionTable.hashBoard(board);
+    std::cout << "HASH1: " << h << std::endl;
+
+    int b = transpositionTable.hashBoard(board);
+    std::cout << "HASH2: " << b << std::endl;
 
     //printBoard();
 }
@@ -41,38 +56,32 @@ void Game::printBoard() {
 }
 
 Result Game::bestMove(int depth, bool maximizing) {
-    //std::vector<int> m = getPossibleMoves();
-
     std::cout << "Total Moves: " << moves << ", Depth: " << depth
     << ", Player: " << 1 + moves % 2 << ", Maximizing: " << maximizing << "\n";
 
     return minimax(depth, INFINITY_NEG, INFINITY_POS, maximizing);
 }
 
-/*std::vector<int> Game::getPossibleMoves() {
-    std::vector<int> moves;
-
-    for(int col = 0;col < COLS;col++) {
-        int row = ROWS - 1 - height[col];
-
-        if(row >= 0 && board[row][col] == 0) {
-            moves.push_back(col);
-        }
-    }
-
-    return moves;
-}*/
-
 Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
     int currentPlayer = (maximizing ? 1 : 2);
 
     //check for draw
-    if(isDraw()) return {-5, 0};
+    if(isDraw()) return {-1, 0};
 
     if(depth == 0) {
         //move is -1 because it is set in if branches
         return {-1, currentEval()};
     }
+
+    //return move if position was already evaluated
+    int hash = transpositionTable.hashBoard(board);
+    Result stored = transpositionTable.get(hash);
+    /*if(stored.move != -1) {
+        if(stored.score >= depth) return stored;
+        //std::cout << "TRANS: " << stored.move << " " << stored.score << std::endl;
+    } else {
+        //std::cout << "NONTRANS: " << stored.move << " " << stored.score << std::endl;
+    }*/
 
     if(maximizing) {
         Result best = {-1, INFINITY_NEG};
@@ -87,6 +96,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
                 makeMove(move, currentPlayer);
                 Result current = minimax(depth - 1, alpha, beta, false);
                 current.move = move;
+
                 //reset board to try every move
                 undoMove(move);
 
@@ -101,6 +111,9 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
             }
         }
 
+        //insert position in transposition table
+        transpositionTable.set(hash, {best.move, depth});
+
         return best;
     } else {
         Result best = {-1, INFINITY_POS};
@@ -112,6 +125,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
                 makeMove(move, currentPlayer);
                 Result current = minimax(depth - 1, alpha, beta, true);
                 current.move = move;
+
                 undoMove(move);
 
                 if(current.score < best.score) {
@@ -122,6 +136,9 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
                 if(beta <= alpha) break;
             }
         }
+
+        //insert position in transposition table
+        transpositionTable.set(hash, {best.move, depth});
 
         return best;
     }
@@ -138,8 +155,8 @@ bool Game::isDraw() {
 int Game::currentEval() {
     int score = 0;
 
-    if(isWinningPosition(1)) return INFINITY_POS;
-    else if(isWinningPosition(2)) return INFINITY_NEG;
+    //if(isWinningPosition(1)) return INFINITY_POS;
+    //else if(isWinningPosition(2)) return INFINITY_NEG;
 
     for(int i = 0;i < ROWS;i++) {
         for(int j = 0;j < COLS;j++) {

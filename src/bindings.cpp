@@ -5,7 +5,7 @@ using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(game) {
    class_<Game>("Game")
-      .constructor<std::vector<std::vector<int>>, std::vector<int>, int, int>()
+      .constructor<std::vector<std::vector<int>>, std::vector<int>>()
       .function("bestMove", &Game::bestMove)
    ;
 

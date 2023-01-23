@@ -3,7 +3,7 @@ importScripts('main.js');
 onmessage = function(message) {
   if (message.data.type === 'RUN') {
     createModule().then(({Game, Vector, Vector2D}) => {
-        const depth = message.data.payload.depth;
+        let depth = parseInt(message.data.payload.depth);
         const board = message.data.payload.board;
         const height = message.data.payload.height;
 
@@ -11,7 +11,7 @@ onmessage = function(message) {
         const vectorHeight = vectorFromArray(height, Vector);
         
         //create instance of C++ game class via embind
-        const game = new Game(vectorBoard, vectorHeight, depth, 0);
+        const game = new Game(vectorBoard, vectorHeight);
         //perform computations
         const result = game.bestMove(depth, false);
         //delete instance for memory management

@@ -2,6 +2,7 @@
 #define H_GAME_HPP
 
 #include "stdafx.hpp"
+#include "transposition.hpp"
 
 #define INFINITY_POS std::numeric_limits<int>::max()
 #define INFINITY_NEG std::numeric_limits<int>::min()
@@ -12,18 +13,10 @@
 //UNDEFINED: should never be returned, is the default value
 enum ExitStatus {TIE, P1_WIN, P2_WIN, UNDEFINED};
 
-//return type to be passed to javascript
-struct Result {
-    int move;
-    int score;
-};
-
 class Game {
     private:
         int ROWS;
         int COLS;
-
-        int DEPTH;
 
         //board representation 0 = empty, 1 = player1, 2 = player2
         std::vector<std::vector<int>> board;
@@ -44,6 +37,9 @@ class Game {
         std::vector<std::vector<int>> heatMap;
         //order potentially better moves earlier
         std::vector<int> moveOrder = {3, 2, 4, 1, 5, 0, 6};
+
+        //ZOBRIST
+        Transposition transpositionTable;
     
     private:
         void initBoard();
@@ -64,7 +60,7 @@ class Game {
         bool isDraw();
 
     public:
-        Game(std::vector<std::vector<int>> _board, std::vector<int> _height, int _depth, int _moves);
+        Game(std::vector<std::vector<int>> _board, std::vector<int> _height);
 
         //returns best move and its evaluation
         Result bestMove(int depth, bool maximizing);
