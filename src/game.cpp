@@ -155,8 +155,8 @@ bool Game::isDraw() {
 int Game::currentEval() {
     int score = 0;
 
-    //if(isWinningPosition(1)) return INFINITY_POS;
-    //else if(isWinningPosition(2)) return INFINITY_NEG;
+    if(isWinningPosition(1)) return INFINITY_POS;
+    else if(isWinningPosition(2)) return INFINITY_NEG;
 
     for(int i = 0;i < ROWS;i++) {
         for(int j = 0;j < COLS;j++) {
