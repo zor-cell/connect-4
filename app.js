@@ -11,6 +11,23 @@ let currentPlayer = SETTINGS.startingPlayer;
 
 let gameOver = false;
 
+initBoard();
+
+function initBoard() {
+    console.log(board, height);
+    //TESTING
+    /*board = [
+        [0, 2, 0, 2, 1, 0, 0],
+        [0, 2, 0, 1, 2, 0, 0],
+        [0, 1, 0, 2, 2, 0, 2],
+        [2, 2, 0, 1, 1, 0, 1],
+        [1, 1, 2, 2, 1, 0, 1],
+        [2, 2, 1, 1, 2, 1, 1]
+    ];
+
+    height = [3, 6, 2, 6, 6, 1, 4];*/
+}
+
 function App() {
     const [depth, setDepth] = React.useState(SETTINGS.depth);
     //list of played moves
@@ -56,7 +73,7 @@ function App() {
                         if(i - k >= 0 && board[i - k][j] == player) {
                             cells.push({i: i - k, j: j});
                             count++;
-                        }else break;
+                        } else break;
                     }
                     if(count >= 4) position = {win: true, player: player, cells: cells};
 
@@ -139,12 +156,25 @@ function App() {
                 const move = message.data.payload.move;
                 const score = message.data.payload.score;
 
-                document.getElementById("result").innerHTML = "Move: " + move + " | Score: " + score;
+                document.getElementById("result").innerHTML = "Move: " + move + " | Score: " + readScore(score);
                 document.getElementById("board").className = "board";
 
                 makeMove(move, false);
             }
         }
+    }
+
+    function readScore(score) {
+        console.log(totalMoves.length + 2);
+        let moves = totalMoves.length + 2;
+
+        let message = "";
+        if(score < 0) message = "Player 2 in ";
+        else if(score > 0) message = "Player 1 in ";
+
+        message += 42 - moves - Math.abs(score);
+
+        return message;
     }
 
     //undo the last 2 moves (player and computer)

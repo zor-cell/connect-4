@@ -7,6 +7,13 @@ Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height) : boa
 
     ROWS = board.size();
     COLS = board[0].size();
+    for(int i = 0;i < ROWS;i++) {
+        for(int j = 0;j < COLS;j++) {
+            if(board[i][j] != 0) moves++;
+        }
+    }
+
+    std::cout << " MOVES " << moves << std::endl;
 
     heatMap.resize(ROWS, std::vector<int>(COLS));
     for(int i = 0;i < ROWS;i++) {
@@ -70,12 +77,12 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
 
     if(depth == 0) {
         //move is -1 because it is set in if branches
-        return {-1, currentEval()};
+        return {-2, currentEval()};
     }
 
     //return move if position was already evaluated
-    int hash = transpositionTable.hashBoard(board);
-    Result stored = transpositionTable.get(hash);
+    //int hash = transpositionTable.hashBoard(board);
+    //Result stored = transpositionTable.get(hash);
     /*if(stored.move != -1) {
         if(stored.score >= depth) return stored;
         //std::cout << "TRANS: " << stored.move << " " << stored.score << std::endl;
@@ -84,16 +91,22 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
     }*/
 
     if(maximizing) {
-        Result best = {-1, INFINITY_NEG};
+        Result best = {-3, INFINITY_NEG};
 
         //go through possible moves
         for(int move : moveOrder) {
             if(isValidMove(move)) {
+                //update board with move
+                makeMove(move, currentPlayer);
+
                 //return best achievable score if win is possible
-                if(isWinningPosition(currentPlayer)) return {move, INFINITY_POS};
+                if(isWinningPosition(currentPlayer)) {
+                    undoMove(move);
+                    //offset by one so the initialising move isnt considered as best move
+                    return {move, 42 - moves + 1};
+                }
 
                 //run algorithm on board with current move played
-                makeMove(move, currentPlayer);
                 Result current = minimax(depth - 1, alpha, beta, false);
                 current.move = move;
 
@@ -112,17 +125,20 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
         }
 
         //insert position in transposition table
-        transpositionTable.set(hash, {best.move, depth});
+        //transpositionTable.set(hash, {best.move, depth});
 
         return best;
     } else {
-        Result best = {-1, INFINITY_POS};
+        Result best = {-4, INFINITY_POS};
 
         for(int move : moveOrder) {
             if(isValidMove(move)) {
-                if(isWinningPosition(currentPlayer)) return {move, INFINITY_NEG};
-
                 makeMove(move, currentPlayer);
+                if(isWinningPosition(currentPlayer)) {
+                    undoMove(move);
+                    return {move, -(42 - moves + 1)};
+                }
+
                 Result current = minimax(depth - 1, alpha, beta, true);
                 current.move = move;
 
@@ -138,7 +154,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
         }
 
         //insert position in transposition table
-        transpositionTable.set(hash, {best.move, depth});
+        //transpositionTable.set(hash, {best.move, depth});
 
         return best;
     }
@@ -155,15 +171,15 @@ bool Game::isDraw() {
 int Game::currentEval() {
     int score = 0;
 
-    if(isWinningPosition(1)) return INFINITY_POS;
-    else if(isWinningPosition(2)) return INFINITY_NEG;
+    //if(isWinningPosition(1)) return INFINITY_POS;
+    //else if(isWinningPosition(2)) return INFINITY_NEG;
 
-    for(int i = 0;i < ROWS;i++) {
+    /*for(int i = 0;i < ROWS;i++) {
         for(int j = 0;j < COLS;j++) {
             if(board[i][j] == 1) score += heatMap[i][j];
             if(board[i][j] == 2) score -= heatMap[i][j];
         }
-    }
+    }*/
 
     return score;
 }
@@ -175,6 +191,8 @@ bool Game::isValidMove(int col) {
 void Game::makeMove(int col, int player) {
     board[ROWS - 1 - height[col]][col] = player;
     height[col]++;
+
+    moves++;
 }
 
 void Game::undoMove(int col) {
@@ -186,6 +204,8 @@ void Game::undoMove(int col) {
 
     //remove stone from col
     height[col]--;
+
+    moves--;
 }
 
 bool Game::isWinningPosition(int player) {
