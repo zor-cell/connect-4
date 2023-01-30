@@ -13,8 +13,6 @@ Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height) : boa
         }
     }
 
-    std::cout << " MOVES " << moves << std::endl;
-
     heatMap.resize(ROWS, std::vector<int>(COLS));
     for(int i = 0;i < ROWS;i++) {
         for(int j = 0;j < COLS;j++) {
@@ -63,8 +61,7 @@ void Game::printBoard() {
 }
 
 Result Game::bestMove(int depth, bool maximizing) {
-    std::cout << "Total Moves: " << moves << ", Depth: " << depth
-    << ", Player: " << 1 + moves % 2 << ", Maximizing: " << maximizing << "\n";
+    //std::cout << "Total Moves: " << moves << ", Depth: " << depth << ", Player: " << 1 + moves % 2 << ", Maximizing: " << maximizing << "\n";
 
     return minimax(depth, INFINITY_NEG, INFINITY_POS, maximizing);
 }
@@ -81,14 +78,14 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
     }
 
     //return move if position was already evaluated
-    //int hash = transpositionTable.hashBoard(board);
-    //Result stored = transpositionTable.get(hash);
-    /*if(stored.move != -1) {
-        if(stored.score >= depth) return stored;
+    int hash = transpositionTable.hashBoard(board);
+    Result stored = transpositionTable.get(hash);
+    if(stored.move != -1) {
+        //return stored;
         //std::cout << "TRANS: " << stored.move << " " << stored.score << std::endl;
     } else {
         //std::cout << "NONTRANS: " << stored.move << " " << stored.score << std::endl;
-    }*/
+    }
 
     if(maximizing) {
         Result best = {-3, INFINITY_NEG};
@@ -101,9 +98,9 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
 
                 //return best achievable score if win is possible
                 if(isWinningPosition(currentPlayer)) {
+                    int score = 42 - moves;
                     undoMove(move);
-                    //offset by one so the initialising move isnt considered as best move
-                    return {move, 42 - moves + 1};
+                    return {move, score};
                 }
 
                 //run algorithm on board with current move played
@@ -125,7 +122,8 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
         }
 
         //insert position in transposition table
-        //transpositionTable.set(hash, {best.move, depth});
+        //transpositionTable.set(hash, {best.move, best.score});
+        transpositionTable.set(hash, {best.move, best.score});
 
         return best;
     } else {
@@ -134,9 +132,11 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
         for(int move : moveOrder) {
             if(isValidMove(move)) {
                 makeMove(move, currentPlayer);
+
                 if(isWinningPosition(currentPlayer)) {
+                    int score = -(42 - moves);
                     undoMove(move);
-                    return {move, -(42 - moves + 1)};
+                    return {move, score};
                 }
 
                 Result current = minimax(depth - 1, alpha, beta, true);
@@ -154,7 +154,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
         }
 
         //insert position in transposition table
-        //transpositionTable.set(hash, {best.move, depth});
+        transpositionTable.set(hash, {best.move, best.score});
 
         return best;
     }

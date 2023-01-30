@@ -9,6 +9,8 @@ let board = Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTIN
 let height = Array.from({length: SETTINGS.cols}, () => 0);
 let currentPlayer = SETTINGS.startingPlayer;
 
+//not with useState because update on count has to be immediate
+let moveCount = 0;
 let gameOver = false;
 
 initBoard();
@@ -30,8 +32,10 @@ function initBoard() {
 
 function App() {
     const [depth, setDepth] = React.useState(SETTINGS.depth);
+
     //list of played moves
     const [totalMoves, setTotalMoves] = React.useState([]);
+
     //store indices of winning pieces in case winning position was reached
     const [winMoves, setWinMoves] = React.useState([]);
 
@@ -41,12 +45,15 @@ function App() {
     }
 
     //check if a win is in the current board position
-    function winningPosition() {
+    function boardState() {
         let position = {
-            win: false,
-            player: null,
+            //-1 = undefined, 0 = draw, 1 = player1 win, 2 = player2 win
+            state: -1,
             cells: [],
         }
+
+        //check for draw
+        if(moveCount >= SETTINGS.rows * SETTINGS.cols) return {state: 0, cell: []};
 
         //count of consecutive pieces
         let count;
@@ -64,7 +71,7 @@ function App() {
                             count++;
                         } else break;
                     }
-                    if(count >= 4) position = {win: true, player: player, cells: cells};
+                    if(count >= 4) position = {state: player, cells: cells};
 
                     //VERTICAL
                     count = 0;
@@ -75,7 +82,7 @@ function App() {
                             count++;
                         } else break;
                     }
-                    if(count >= 4) position = {win: true, player: player, cells: cells};
+                    if(count >= 4) position = {state: player, cells: cells};
 
                     //DIAGONAL LEFT
                     count = 0;
@@ -86,7 +93,7 @@ function App() {
                             count++;
                         } else break;
                     }
-                    if(count >= 4) position = {win: true, player: player, cells: cells};
+                    if(count >= 4) position = {state: player, cells: cells};
 
                     //DIAGONAL RIGHT
                     count = 0;
@@ -97,7 +104,7 @@ function App() {
                             count++;
                         } else break;
                     }
-                    if(count >= 4) position = {win: true, player: player, cells: cells};
+                    if(count >= 4) position = {state: player, cells: cells};
                 }
             }
         }
@@ -119,16 +126,23 @@ function App() {
             height[col]++;
 
             //update moves list
+            moveCount++;
             setTotalMoves(totalMoves => [...totalMoves, col]);
 
-            //check for win in position
-            let winPosition = winningPosition();
-            if(winPosition.win) {
-                document.getElementById("result").innerHTML = "Player " + winPosition.player + " won!";
-
-                setWinMoves(winPosition.cells);
+            //check for win or draw in position
+            let state = boardState();
+            if(state.state == 0) {
+                document.getElementById("result").innerHTML = "Draw!";
 
                 gameOver = true;
+                return;
+            } else if(state.state > 0) {
+                document.getElementById("result").innerHTML = "Player " + state.state + " won!";
+
+                setWinMoves(state.cells);
+
+                gameOver = true;
+                return;
             }
 
             currentPlayer = (currentPlayer === 1 ? 2 : 1);
@@ -151,6 +165,7 @@ function App() {
             }
         });
 
+        //receive result as message from web worker
         worker.onmessage = function(message) {
             if(message.data.type === 'RESULT') {
                 const move = message.data.payload.move;
@@ -165,14 +180,15 @@ function App() {
     }
 
     function readScore(score) {
-        console.log(totalMoves.length + 2);
-        let moves = totalMoves.length + 2;
+        //+1 because makeMove is called afterwards
+        let moves = moveCount + 1;
 
         let message = "";
         if(score < 0) message = "Player 2 in ";
         else if(score > 0) message = "Player 1 in ";
 
-        message += 42 - moves - Math.abs(score);
+        console.log("SCORE: ", score, "MOVES: ", moves);
+        message += SETTINGS.rows * SETTINGS.cols - moves - Math.abs(score);
 
         return message;
     }
@@ -191,7 +207,9 @@ function App() {
                 if(board[i][move] != 0) {
                     board[i][move] = 0;
                     height[move]--;
+
                     temp.pop();
+                    moveCount--;
                     break;
                 }
             }
@@ -209,14 +227,14 @@ function App() {
 
     //set cell background-color with class names and css
     function setCellColor(i, j) {
-        //color winning moves
+        //winning moves
         if(winMoves.length > 0) {
             for(let move of winMoves) {
                 if(i == move.i && j == move.j) return 'win';
             }
         }
 
-        //color last move
+        //last move
         if(totalMoves.length > 0) {
             let col = totalMoves[totalMoves.length - 1];
             let row = SETTINGS.rows - height[col];
