@@ -78,14 +78,14 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
     }
 
     //return move if position was already evaluated
-    int hash = transpositionTable.hashBoard(board);
+    /*int hash = transpositionTable.hashBoard(board);
     Result stored = transpositionTable.get(hash);
     if(stored.move != -1) {
-        //return stored;
-        //std::cout << "TRANS: " << stored.move << " " << stored.score << std::endl;
+        return stored;
+        std::cout << "TRANS: " << stored.move << " " << stored.score << std::endl;
     } else {
-        //std::cout << "NONTRANS: " << stored.move << " " << stored.score << std::endl;
-    }
+        std::cout << "NONTRANS: " << stored.move << " " << stored.score << std::endl;
+    }*/
 
     if(maximizing) {
         Result best = {-3, INFINITY_NEG};
@@ -123,7 +123,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
 
         //insert position in transposition table
         //transpositionTable.set(hash, {best.move, best.score});
-        transpositionTable.set(hash, {best.move, best.score});
+        //transpositionTable.set(hash, {best.move, best.score});
 
         return best;
     } else {
@@ -154,7 +154,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
         }
 
         //insert position in transposition table
-        transpositionTable.set(hash, {best.move, best.score});
+        //transpositionTable.set(hash, {best.move, best.score});
 
         return best;
     }
