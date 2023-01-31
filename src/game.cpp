@@ -63,10 +63,18 @@ void Game::printBoard() {
 Result Game::bestMove(int depth, bool maximizing) {
     //std::cout << "Total Moves: " << moves << ", Depth: " << depth << ", Player: " << 1 + moves % 2 << ", Maximizing: " << maximizing << "\n";
 
-    return minimax(depth, INFINITY_NEG, INFINITY_POS, maximizing);
+    Result res = minimax(depth, INFINITY_NEG, INFINITY_POS, maximizing);
+
+    //benchmarking
+    Benchmark::save();
+
+    return res;
 }
 
 Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
+    //benchmarking
+    Benchmark::nodesVisited++;
+
     int currentPlayer = (maximizing ? 1 : 2);
 
     //check for draw

@@ -3,6 +3,7 @@
 
 #include "stdafx.hpp"
 #include "transposition.hpp"
+#include "benchmark.hpp"
 
 #define INFINITY_POS std::numeric_limits<int>::max()
 #define INFINITY_NEG std::numeric_limits<int>::min()
