@@ -204,6 +204,17 @@
     font-weight: var(--fw-900);
     line-height: 1.1;
   }
+
+  .settings {
+    display: flex;
+
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    padding: 25px;
+    gap: 10px;
+  }
   
   section,
   .section {

@@ -17,6 +17,16 @@ initBoard();
 
 function initBoard() {
     console.log(board, height);
+
+    for(let i = 0;i < board.length;i++) {
+        for(let j = 0;j < board[i].length;j++) {
+            board[i][j] = 0;
+        }
+    }
+
+    for(let i = 0;i < height.length;i++) {
+        height[i] = 0;
+    }
     //TESTING
     /*board = [
         [0, 2, 0, 2, 1, 0, 0],
@@ -32,6 +42,7 @@ function initBoard() {
 
 function App() {
     const [depth, setDepth] = React.useState(SETTINGS.depth);
+    const [startingPlayer, setStartingPlayer] = React.useState(SETTINGS.startingPlayer);
 
     //list of played moves
     const [totalMoves, setTotalMoves] = React.useState([]);
@@ -257,6 +268,26 @@ function App() {
         setDepth(event.target.value);
     }
 
+    function startingMove() {
+        if(moveCount === 0 && startingPlayer != 1) {
+            makeMoveComputer();
+        }
+    }
+
+    function startNewGame() {
+        initBoard();
+
+        setDepth(depth);
+        setTotalMoves([]);
+        setWinMoves([]);
+
+        moveCount = 0;
+        gameOver = false;
+        currentPlayer = (startingPlayer === 1 ? 2 : 1);
+
+        setStartingPlayer(currentPlayer);
+    }
+
     return (
         <React.Fragment>
             {console.log("RENDER")}
@@ -278,15 +309,21 @@ function App() {
                     })}
                 </tbody>
             </table>
-            
-            <h3>Depth: {depth}</h3>
-            <h3>Moves: {(totalMoves.length == 0 ? "-" : totalMoves.map(move => {return move + " ";}))}</h3>
-            
-            <button onClick={undoMove}>Undo</button>
-            <input type="range" className="test" min="1" max="13" value={depth} onChange={changeDepth}></input>
 
-            <h2>Result</h2>
+            {console.log(startingPlayer)}
+            {startingMove()}
+            
+            <h3>Moves: {(totalMoves.length == 0 ? "Player " + startingPlayer + " starts!" : totalMoves.map(move => {return move + " ";}))}</h3>
             <h3 id="result">No Result</h3>
+
+            <div className="settings">
+                <div>
+                    <input type="range" className="test" min="1" max="13" value={depth} onChange={changeDepth}></input>
+                    <h3>Depth: {depth}</h3>
+                </div>
+                <button onClick={undoMove}>Undo</button>
+                <button onClick={startNewGame}>New Game</button>
+            </div>
         </React.Fragment>
     );
 }
