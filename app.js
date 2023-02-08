@@ -2,7 +2,7 @@ const SETTINGS = {
     rows: 6,
     cols: 7,
     startingPlayer: 1,
-    depth: 6,
+    depth: 11,
 };
 
 let board = Array.from({length: SETTINGS.rows}, () => Array.from({length: SETTINGS.cols}, () => 0));
@@ -63,9 +63,6 @@ function App() {
             cells: [],
         }
 
-        //check for draw
-        if(moveCount >= SETTINGS.rows * SETTINGS.cols) return {state: 0, cell: []};
-
         //count of consecutive pieces
         let count;
         //indices of consecutive pieces
@@ -119,6 +116,9 @@ function App() {
                 }
             }
         }
+
+        //check for draw if no win is in position
+        if(moveCount >= SETTINGS.rows * SETTINGS.cols) return {state: 0, cell: []};
 
         return position;
     }
@@ -209,9 +209,9 @@ function App() {
         if(totalMoves.length == 0) return;
 
         let temp = [...totalMoves];
-
+        
         //undo 2 last moves made
-        for(let _ = 0;_ < 2;_++) {
+        for(let _ = 0;_ < 2; _++) {
             let move = temp[temp.length - 1];
 
             for(let i = 0;i < board.length;i++) {
@@ -274,18 +274,20 @@ function App() {
         }
     }
 
-    function startNewGame() {
+    async function startNewGame() {
         initBoard();
-
-        setDepth(depth);
-        setTotalMoves([]);
-        setWinMoves([]);
 
         moveCount = 0;
         gameOver = false;
         currentPlayer = (startingPlayer === 1 ? 2 : 1);
 
+        setDepth(depth);
+        setTotalMoves([]);
+        setWinMoves([]);
         setStartingPlayer(currentPlayer);
+
+        //if computer starts sleep 
+        if(currentPlayer != 1) await new Promise(resolve => setTimeout(resolve, 2000));
     }
 
     return (
