@@ -12,6 +12,7 @@ let currentPlayer = SETTINGS.startingPlayer;
 //not with useState because update on count has to be immediate
 let moveCount = 0;
 let gameOver = false;
+let movesBit = [];
 
 initBoard();
 
@@ -139,6 +140,7 @@ function App() {
             //update moves list
             moveCount++;
             setTotalMoves(totalMoves => [...totalMoves, col]);
+            movesBit.push(col);
 
             //check for win or draw in position
             let state = boardState();
@@ -154,7 +156,7 @@ function App() {
 
                 gameOver = true;
                 return;
-            }
+              }
 
             currentPlayer = (currentPlayer === 1 ? 2 : 1);
             if(isHuman) makeMoveComputer();
@@ -172,7 +174,8 @@ function App() {
             payload: {
                 depth: depth,
                 board: board,
-                height: height
+                height: height,
+                moves: movesBit
             }
         });
 
@@ -198,7 +201,6 @@ function App() {
         if(score < 0) message = "Player 2 in ";
         else if(score > 0) message = "Player 1 in ";
 
-        console.log("SCORE: ", score, "MOVES: ", moves);
         message += SETTINGS.rows * SETTINGS.cols - moves - Math.abs(score);
 
         return message;
@@ -220,6 +222,7 @@ function App() {
                     height[move]--;
 
                     temp.pop();
+                    movesBit.pop();
                     moveCount--;
                     break;
                 }

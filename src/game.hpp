@@ -5,6 +5,8 @@
 #include "transposition.hpp"
 #include "benchmark.hpp"
 
+#include "bitset"
+
 #define INFINITY_POS std::numeric_limits<int>::max()
 #define INFINITY_NEG std::numeric_limits<int>::min()
 
@@ -41,6 +43,16 @@ class Game {
 
         //ZOBRIST
         Transposition transpositionTable;
+
+        //bitboard representation
+        //bitboard[0] is starting player
+        std::vector<long long int> bitboard;
+        std::vector<int> heightBit;
+        std::vector<int> movesBit;
+        int counterBit;
+
+        const long long int TOP = 0b1000000100000010000001000000100000010000001000000;
+        const long long int FULL = 0b11111111111111111111111111111111111111111111111111;
     
     private:
         void initBoard();
@@ -60,8 +72,16 @@ class Game {
 
         bool isDraw();
 
+        //bitboard
+        void makeMoveBit(int col);
+        void undoMoveBit();
+        bool isWinBit(long long int board);
+        bool isDrawBit();
+        std::vector<int> validMovesBit();
+        bool isValidMoveBit(int col);
+
     public:
-        Game(std::vector<std::vector<int>> _board, std::vector<int> _height);
+        Game(std::vector<std::vector<int>> _board, std::vector<int> _height, std::vector<int> _moves);
 
         //returns best move and its evaluation
         Result bestMove(int depth, bool maximizing);

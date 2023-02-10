@@ -6,12 +6,14 @@ onmessage = function(message) {
         let depth = parseInt(message.data.payload.depth);
         const board = message.data.payload.board;
         const height = message.data.payload.height;
+        const moves = message.data.payload.moves;
 
         const vectorBoard = vector2dFromArray2d(board, Vector, Vector2D);
         const vectorHeight = vectorFromArray(height, Vector);
+        const vectorMoves = vectorFromArray(moves, Vector);
         
         //create instance of C++ game class via embind
-        const game = new Game(vectorBoard, vectorHeight);
+        const game = new Game(vectorBoard, vectorHeight, vectorMoves);
         //perform computations
         const result = game.bestMove(depth, false);
         //delete instance for memory management

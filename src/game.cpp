@@ -1,26 +1,59 @@
 #include "game.hpp"
 
-Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height) : board(_board), height(_height), transpositionTable(1000000) {
+Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height, std::vector<int> _moves) : board(_board), height(_height), transpositionTable(1000000) {
     srand(time(NULL));
 
     transpositionTable.print();
 
     ROWS = board.size();
     COLS = board[0].size();
+
+    bitboard.resize(2, 0);
+    heightBit.resize(7);
+    for(int i = 0;i < 7;i++) {
+        heightBit[i] = i * 7;
+    }
+
+    movesBit.resize(42);
+    for(int i = 0;i < _moves.size();i++) {
+        movesBit[i] = _moves[i];
+    }
+
     for(int i = 0;i < ROWS;i++) {
         for(int j = 0;j < COLS;j++) {
-            if(board[i][j] != 0) moves++;
+            if(board[i][j] != 0) {
+                moves++;
+                counterBit++;
+                heightBit[j]++;
+
+                if(board[i][j] == 1) {
+                    bitboard[0] ^= (1LL << (5 + j * 7 - i));
+                } else if(board[i][j] == 2) {
+                    bitboard[1] ^= (1LL << (5 + j * 7 - i));
+                }
+            }
         }
     }
 
-    heatMap.resize(ROWS, std::vector<int>(COLS));
-    for(int i = 0;i < ROWS;i++) {
-        for(int j = 0;j < COLS;j++) {
-            heatMap[i][j] = 5 - std::abs(COLS / 2 - j);
-            //std::cout << heatMap[i][j] << " ";
-        }
-        //std::cout << "\n";
+    for(int i = 0;i < 2;i++) {
+        std::bitset<64> a(bitboard[i]);
+        std::cout << "BOARD " << i << ": " << a << std::endl;
     }
+
+    std::cout << "COUNTER: " << counterBit << std::endl;
+    std::cout << "PLAYER: " << (counterBit & 1) << std::endl;
+
+    std::cout << "HEIGHT: ";
+    for(int i : heightBit) {
+        std::cout << i << " ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "MOVES: ";
+    for(int i : movesBit) {
+        std::cout << i << " ";
+    }
+    std::cout << std::endl;
 
     /*for(auto i : table) {
         for(auto j : i) {
@@ -28,12 +61,6 @@ Game::Game(std::vector<std::vector<int>> _board, std::vector<int> _height) : boa
         }
         std::cout << "\n";
     }*/
-
-    int h = transpositionTable.hashBoard(board);
-    std::cout << "HASH1: " << h << std::endl;
-
-    int b = transpositionTable.hashBoard(board);
-    std::cout << "HASH2: " << b << std::endl;
 
     //printBoard();
 }
@@ -64,25 +91,20 @@ Result Game::bestMove(int depth, bool maximizing) {
     //std::cout << "Total Moves: " << moves << ", Depth: " << depth << ", Player: " << 1 + moves % 2 << ", Maximizing: " << maximizing << "\n";
 
     Result res = minimax(depth, INFINITY_NEG, INFINITY_POS, maximizing);
-
-    //benchmarking
-    Benchmark::save();
+    std::cout << "RESULTING SCORE: " << res.score << std::endl;
 
     return res;
 }
 
 Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
-    //benchmarking
-    Benchmark::nodesVisited++;
-
-    int currentPlayer = (maximizing ? 1 : 2);
+    //int currentPlayer = (maximizing ? 1 : 2);
 
     //check for draw
-    if(isDraw()) return {-1, 0};
+    if(isDrawBit()) return {-1, 0};
 
     if(depth == 0) {
         //move is -1 because it is set in if branches
-        return {-2, currentEval()};
+        return {-2, 0};
     }
 
     //return move if position was already evaluated
@@ -100,14 +122,15 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
 
         //go through possible moves
         for(int move : moveOrder) {
-            if(isValidMove(move)) {
+            if(isValidMoveBit(move)) {
                 //update board with move
-                makeMove(move, currentPlayer);
+                makeMoveBit(move);
 
                 //return best achievable score if win is possible
-                if(isWinningPosition(currentPlayer)) {
-                    int score = 42 - moves;
-                    undoMove(move);
+                if(isWinBit(bitboard[(counterBit - 1) & 1])) {
+                    std::cout << "win" << ((counterBit - 1) & 1) << std::endl;
+                    int score = 42 - counterBit;
+                    undoMoveBit();
                     return {move, score};
                 }
 
@@ -116,7 +139,7 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
                 current.move = move;
 
                 //reset board to try every move
-                undoMove(move);
+                undoMoveBit();
 
                 //update best move and score if better is found
                 if(current.score > best.score) {
@@ -138,19 +161,20 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
         Result best = {-4, INFINITY_POS};
 
         for(int move : moveOrder) {
-            if(isValidMove(move)) {
-                makeMove(move, currentPlayer);
+            if(isValidMoveBit(move)) {
+                makeMoveBit(move);
 
-                if(isWinningPosition(currentPlayer)) {
-                    int score = -(42 - moves);
-                    undoMove(move);
+                if(isWinBit(bitboard[(counterBit - 1) & 1])) {
+                    //std::cout << "win" << ((counterBit - 1) & 1) << std::endl;
+                    int score = -(42 - counterBit);
+                    undoMoveBit();
                     return {move, score};
                 }
 
                 Result current = minimax(depth - 1, alpha, beta, true);
                 current.move = move;
 
-                undoMove(move);
+                undoMoveBit();
 
                 if(current.score < best.score) {
                     best = current;
@@ -277,4 +301,54 @@ bool Game::isWinningPosition(int player) {
     for(int j = 0;j < 4;j++) {
 
     }*/
+}
+
+
+//bitboard
+void Game::makeMoveBit(int col) {
+    long long int move = 1LL << heightBit[col]++;
+    bitboard[counterBit & 1] ^= move;
+    movesBit[counterBit++] = col;
+}
+
+void Game::undoMoveBit() {
+    int col = movesBit[--counterBit];
+    long long int move = 1LL << --heightBit[col];
+    bitboard[counterBit & 1] ^= move;
+}
+
+bool Game::isWinBit(long long int board) {
+    std::vector<int> directions{1, 7, 6, 8};
+
+    for(int dir : directions) {
+        if((board & (board >> dir)) & (board >> (2 * dir)) & (board >> (3 * dir)) != 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+std::vector<int> Game::validMovesBit() {
+    std::vector<int> moves;
+
+    for(int col = 0;col <= 6;col++) {
+        if((TOP & (1LL << height[col])) == 0) {
+            moves.push_back(col);
+        }
+    }
+
+    return moves;
+}
+
+bool Game::isValidMoveBit(int col) {
+    if((TOP & (1LL << height[col])) == 0) return true;
+
+    return false;
+}
+
+bool Game::isDrawBit() {
+    if((__builtin_popcount(bitboard[0] & bitboard[1]) ^ FULL) == 0) return true;
+
+    return false;
 }
