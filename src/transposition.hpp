@@ -3,24 +3,24 @@
 
 #include "stdafx.hpp"
 
-//return type to be passed to javascript
 struct Result {
     int move;
     int score;
 };
 
+struct Entry {
+    long long int key;
+    Result value;
+    int depth;
+};
+
 class Transposition {
     private:
-        struct Entry {
-            int key;
-            Result value;
-        };
-
         std::vector<std::vector<int>> zobristTable;
         std::vector<Entry> entries;
 
     private:
-        int index(int key);
+        int index(long long int key);
 
         void initZobristTable();
 
@@ -28,8 +28,8 @@ class Transposition {
         Transposition();
         Transposition(int size);
 
-        Result get(int key);
-        void set(int key, const Result& value);
+        Entry get(long long int key);
+        void set(long long int key, const Result value, int depth);
 
         int hashBoard(const std::vector<std::vector<int>>& board);
 

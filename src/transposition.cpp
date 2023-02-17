@@ -8,28 +8,29 @@ Transposition::Transposition(int size) {
 }
 
 void Transposition::print() {
-    std::cout << "size: " << entries.size() << ", storage: " << (entries.size() * sizeof(Result) + entries.size() * sizeof(int)) / 1000000 << "MB" << std::endl;
+    std::cout << "size: " << entries.size() << ", storage: " << (entries.size() * sizeof(Entry)) / 1000000 << "MB" << std::endl;
 }
 
-int Transposition::index(int key) {
+int Transposition::index(long long int key) {
     return key % entries.size();
 }
 
-Result Transposition::get(int key) {
+Entry Transposition::get(long long int key) {
     int i = index(key);
 
     if(entries[i].key == key) {
-        return entries[i].value;
+        return entries[i];
     }
 
-    return {-1, -1};
+    return {0, {-1, -1}, -1};
 }
 
-void Transposition::set(int key, const Result& value) {
+void Transposition::set(long long int key, const Result value, int depth) {
     int i = index(key);
 
     entries[i].key = key;
     entries[i].value = value;
+    entries[i].depth = depth;
 }
 
 void Transposition::initZobristTable() {

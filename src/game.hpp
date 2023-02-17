@@ -73,8 +73,8 @@ class Game {
         bool isDraw();
 
         //bitboard
-        void makeMoveBit(int col);
-        void undoMoveBit();
+        void makeMoveBit(int col, int player);
+        void undoMoveBit(int player);
         bool isWinBit(long long int board);
         bool isDrawBit();
         std::vector<int> validMovesBit();

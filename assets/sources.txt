@@ -1,1 +1,2 @@
 https://github.com/denkspuren/BitboardC4/blob/master/BitboardDesign.md
+http://blog.gamesolver.org/
