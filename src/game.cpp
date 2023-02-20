@@ -189,6 +189,38 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
     }
 }
 
+int Game::negamax(long long int currentBoard, int depth, int alpha, int beta) {
+    if(depth == 0) return 0;
+
+    //check for draw
+    if(counterBit == ROWS * COLS) return 0;
+
+    for(int move : moveOrder) {
+        if(isValidMoveBit(move)) {
+            makeMoveBit(move, currentBoard);
+
+            if(isWinBit(bitboard[currentBoard])) {
+                undoMoveBit(currentBoard);
+                return ROWS * COLS - counterBit;
+            }
+
+            int max = ROWS * COLS - counterBit;
+            if(beta > max) {
+                beta = max;
+                if(alpha >= beta) return beta;
+            }
+
+            int score = -negamax(currentBoard, depth - 1, -alpha, -beta);
+            undoMoveBit(currentBoard);
+
+            if(score >= beta) return score;
+            alpha = std::max(alpha, score);
+        }
+    }
+
+    return alpha;
+}
+
 bool Game::isDraw() {
     for(int i = 0;i < COLS;i++) {
         if(height[i] < ROWS) return false;

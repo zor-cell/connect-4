@@ -67,6 +67,8 @@ class Game {
 
         //recursive search of game tree where every node is a different board position coming from a previous node
         Result minimax(int depth, int alpha, int beta, bool maximizing);
+
+        int negamax(long long int currentBoard, int depth, int alpha, int beta);
         //evaluates current board position
         int currentEval();
 
