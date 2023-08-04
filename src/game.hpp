@@ -44,6 +44,7 @@ class Game {
         //ZOBRIST
         Transposition transpositionTable;
 
+        int bestNegaMove = -1;
         //bitboard representation
         //bitboard[0] is starting player
         std::vector<long long int> bitboard;
@@ -68,16 +69,16 @@ class Game {
         //recursive search of game tree where every node is a different board position coming from a previous node
         Result minimax(int depth, int alpha, int beta, bool maximizing);
 
-        int negamax(long long int currentBoard, int depth, int alpha, int beta);
+        int negamax(int depth, int alpha, int beta);
         //evaluates current board position
         int currentEval();
 
         bool isDraw();
 
         //bitboard
-        void makeMoveBit(int col, int player);
-        void undoMoveBit(int player);
-        bool isWinBit(long long int board);
+        void makeMoveBit(long long int &bboard, int col);
+        void undoMoveBit(long long int &bboard);
+        bool isWinBit(long long int bboard);
         bool isDrawBit();
         std::vector<int> validMovesBit();
         bool isValidMoveBit(int col);

@@ -185,7 +185,7 @@ function App() {
                 const move = message.data.payload.move;
                 const score = message.data.payload.score;
 
-                document.getElementById("result").innerHTML = "Move: " + move + " | Score: " + readScore(score);
+                document.getElementById("result").innerHTML = "Move: " + move + " | Score: " + score;//readScore(score);
                 document.getElementById("board").className = "board";
 
                 makeMove(move, false);

@@ -89,14 +89,13 @@ void Game::printBoard() {
 
 Result Game::bestMove(int depth, bool maximizing) {
     //std::cout << "Total Moves: " << moves << ", Depth: " << depth << ", Player: " << 1 + moves % 2 << ", Maximizing: " << maximizing << "\n";
+    int score = negamax(depth, INFINITY_NEG, INFINITY_POS);
+    std::cout << "RESULTING SCORE: " << score << std::endl;
 
-    Result res = minimax(depth, INFINITY_NEG, INFINITY_POS, maximizing);
-    std::cout << "RESULTING SCORE: " << res.score << std::endl;
-
-    return res;
+    return {bestNegaMove, score};
 }
 
-Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
+/*Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
     //check for draw
     if(counterBit == ROWS * COLS) return {-1, 0};
 
@@ -106,14 +105,14 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
     }
 
     //return move if position was already evaluated
-    /*long long int hash = bitboard[0] ^ bitboard[1];
+    long long int hash = bitboard[0] ^ bitboard[1];
     Entry stored = transpositionTable.get(hash);
     if(stored.depth != -1) {
         if(stored.depth >= depth) {
             //std::cout << "TRANS: " << stored.value.move << " " << stored.value.score << std::endl;
             return stored.value;
         }
-    }*/
+    }
 
     int currentBoard = counterBit % 2;
 
@@ -187,38 +186,47 @@ Result Game::minimax(int depth, int alpha, int beta, bool maximizing) {
 
         return best;
     }
-}
+}*/
 
-int Game::negamax(long long int currentBoard, int depth, int alpha, int beta) {
+int Game::negamax(int depth, int alpha, int beta) {
+    int player = counterBit % 2;
+    long long int bboard = bitboard[player];
+
     if(depth == 0) return 0;
 
     //check for draw
     if(counterBit == ROWS * COLS) return 0;
 
+    int score = INFINITY_NEG;
     for(int move : moveOrder) {
         if(isValidMoveBit(move)) {
-            makeMoveBit(move, currentBoard);
+            makeMoveBit(bboard, move);
 
-            if(isWinBit(bitboard[currentBoard])) {
-                undoMoveBit(currentBoard);
+            if(isWinBit(bboard)) {
+                undoMoveBit(bboard);
                 return ROWS * COLS - counterBit;
             }
 
-            int max = ROWS * COLS - counterBit;
-            if(beta > max) {
+            //int max = ROWS * COLS - counterBit;
+            /*if(beta > max) {
                 beta = max;
                 if(alpha >= beta) return beta;
+            }*/
+
+            //int score = -negamax(bboard, depth - 1, (player == 0 ? 1 : 0), -alpha, -beta);
+            int current = -negamax(depth - 1, -alpha, -beta);
+            if(current > score) {
+                score = current;
+                bestNegaMove = move;
             }
+            undoMoveBit(bboard);
 
-            int score = -negamax(currentBoard, depth - 1, -alpha, -beta);
-            undoMoveBit(currentBoard);
-
-            if(score >= beta) return score;
-            alpha = std::max(alpha, score);
+            //if(score >= beta) return score;
+            //alpha = std::max(alpha, score);
         }
     }
 
-    return alpha;
+    return score;
 }
 
 bool Game::isDraw() {
@@ -334,6 +342,38 @@ bool Game::isWinningPosition(int player) {
 
 
 //bitboard
+void Game::makeMoveBit(long long int &bboard, int col) {
+    long long int move = 1LL << heightBit[col]++;
+    bboard ^= move;
+    movesBit[counterBit++] = col;
+}
+
+void Game::undoMoveBit(long long int &bboard) {
+    int col = movesBit[--counterBit];
+    long long int move = 1LL << --heightBit[col];
+    bboard ^= move;
+}
+
+bool Game::isWinBit(long long int bboard) {
+    std::vector<int> directions{1, 7, 6, 8};
+
+    for(int dir : directions) {
+        if(((bboard & (bboard >> dir)) & (bboard >> (2 * dir)) & (bboard >> (3 * dir))) != 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool Game::isValidMoveBit(int col) {
+    if((TOP & (1LL << height[col])) == 0) return true;
+
+    return false;
+}
+
+//original
+/*
 void Game::makeMoveBit(int col, int currentBoard) {
     long long int move = 1LL << heightBit[col]++;
     bitboard[currentBoard] ^= move;
@@ -368,4 +408,4 @@ bool Game::isDrawBit() {
     if((__builtin_popcount(bitboard[0] & bitboard[1]) ^ FULL) == 0) return true;
 
     return false;
-}
+}*/
